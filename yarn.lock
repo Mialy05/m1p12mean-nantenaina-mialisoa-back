@@ -159,6 +159,7 @@ __metadata:
   dependencies:
     body-parser: "npm:^1.20.3"
     cors: "npm:^2.8.5"
+    dayjs: "npm:^1.11.13"
     dotenv: "npm:^16.4.7"
     express: "npm:^4.21.2"
     mongoose: "npm:^8.12.1"
@@ -379,6 +380,13 @@ __metadata:
     shebang-command: "npm:^2.0.0"
     which: "npm:^2.0.1"
   checksum: 10/0d52657d7ae36eb130999dffff1168ec348687b48dd38e2ff59992ed916c88d328cf1d07ff4a4a10bc78de5e1c23f04b306d569e42f7a2293915c081e4dfee86
+  languageName: node
+  linkType: hard
+
+"dayjs@npm:^1.11.13":
+  version: 1.11.13
+  resolution: "dayjs@npm:1.11.13"
+  checksum: 10/7374d63ab179b8d909a95e74790def25c8986e329ae989840bacb8b1888be116d20e1c4eee75a69ea0dfbae13172efc50ef85619d304ee7ca3c01d5878b704f5
   languageName: node
   linkType: hard
 

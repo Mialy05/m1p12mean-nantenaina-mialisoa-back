@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const demandeDevisSchema = new mongoose.Schema({
   vehiculeId: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
     ref: "Vehicule",
     required: false,
   },
@@ -21,6 +21,14 @@ const demandeDevisSchema = new mongoose.Schema({
   saveVehicule: {
     type: Boolean,
     required: false,
+  },
+  status: {
+    type: Number,
+    required: true,
+  },
+  kilometrage: {
+    type: Number,
+    required: true,
   },
 });
 

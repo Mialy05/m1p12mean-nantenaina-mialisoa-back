@@ -1,12 +1,9 @@
 const mongoose = require("mongoose");
 
 const vehiculeSchema = new mongoose.Schema({
-  id: {
-    type: String,
-    required: true,
-  },
   marque: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Marque",
     required: true,
   },
   modele: {
@@ -17,12 +14,9 @@ const vehiculeSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
-  kilometrage: {
-    type: Number,
-    required: true,
-  },
   motorisation: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Motorisation",
     required: true,
   },
 });

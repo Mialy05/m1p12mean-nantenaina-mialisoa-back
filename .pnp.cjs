@@ -29,6 +29,7 @@ const RAW_RUNTIME_STATE =
         "packageDependencies": [\
           ["body-parser", "npm:1.20.3"],\
           ["cors", "npm:2.8.5"],\
+          ["dayjs", "npm:1.11.13"],\
           ["dotenv", "npm:16.4.7"],\
           ["express", "npm:4.21.2"],\
           ["mongoose", "npm:8.12.1"],\
@@ -222,6 +223,7 @@ const RAW_RUNTIME_STATE =
           ["back-end", "workspace:."],\
           ["body-parser", "npm:1.20.3"],\
           ["cors", "npm:2.8.5"],\
+          ["dayjs", "npm:1.11.13"],\
           ["dotenv", "npm:16.4.7"],\
           ["express", "npm:4.21.2"],\
           ["mongoose", "npm:8.12.1"],\
@@ -469,6 +471,15 @@ const RAW_RUNTIME_STATE =
           ["path-key", "npm:3.1.1"],\
           ["shebang-command", "npm:2.0.0"],\
           ["which", "npm:2.0.2"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
+    ["dayjs", [\
+      ["npm:1.11.13", {\
+        "packageLocation": "./.yarn/cache/dayjs-npm-1.11.13-d478bb9479-7374d63ab1.zip/node_modules/dayjs/",\
+        "packageDependencies": [\
+          ["dayjs", "npm:1.11.13"]\
         ],\
         "linkType": "HARD"\
       }]\
