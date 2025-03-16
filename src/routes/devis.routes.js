@@ -3,5 +3,6 @@ const DemandeDevisController = require("../modules/devis/controllers/DevisContro
 
 router.post("/demandes", DemandeDevisController.createDemandeDevis);
 router.get("/demandes", DemandeDevisController.findAllDemandeDevis);
+// router.get("/vehicules", DemandeDevisController.findAllVehicule);
 
 module.exports = router;

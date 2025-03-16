@@ -19,6 +19,10 @@ const vehiculeSchema = new mongoose.Schema({
     ref: "Motorisation",
     required: true,
   },
+  immatriculation: {
+    type: String,
+    required: true,
+  },
 });
 
 module.exports = mongoose.model("Vehicule", vehiculeSchema);

@@ -14,6 +14,7 @@ app.use("/test", require("./routes/test"));
 app.use("/devis", require("./routes/devis.routes.js"));
 app.use("/motorisations", require("./routes/motorisation.routes.js"));
 app.use("/marques", require("./routes/marque.routes.js"));
+app.use("/vehicules", require("./routes/vehicule.routes.js"));
 
 mongoose
   .connect(process.env.MONGO_URL, {
