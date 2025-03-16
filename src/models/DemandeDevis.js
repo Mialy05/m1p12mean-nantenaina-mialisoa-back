@@ -30,6 +30,10 @@ const demandeDevisSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
+  utilisateur: {
+    type: Object,
+    required: true,
+  },
 });
 
 module.exports = mongoose.model("DemandeDevis", demandeDevisSchema);

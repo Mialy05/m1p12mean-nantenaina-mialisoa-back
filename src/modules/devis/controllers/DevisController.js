@@ -1,4 +1,5 @@
 const Vehicule = require("../../../models/Vehicule");
+const { findUtilisateurById } = require("../../auth/services/auth.service");
 const {
   findVehiculeById,
 } = require("../../vehicules/services/vehicule.service");
@@ -22,17 +23,27 @@ class DevisController {
 
     if (demande.vehiculeId) {
       const vehicule = await findVehiculeById(demande.vehiculeId);
-      console.log(vehicule);
       demande.vehicule = vehicule;
       demande.vehicule.marque = vehicule.marque.nom;
       demande.vehicule.motorisation = vehicule.motorisation.nom;
     }
 
-    demande.vehiculeId = undefined;
+    const utilisateur = await findUtilisateurById(req.userId);
+    if (utilisateur) {
+      demande.utilisateur = {};
+      demande.utilisateur.id = utilisateur.id;
+      demande.utilisateur.nom = utilisateur.nom;
+      demande.utilisateur.prenom = utilisateur.prenom;
 
-    await demande.save();
+      demande.vehiculeId = undefined;
+      console.log("demande", demande);
 
-    res.json({ message: "Demande de devis créée" });
+      await demande.save();
+
+      res.json({ message: "Demande de devis créée" });
+    } else {
+      res.status(403).json({ isError: true, message: "Utilisateur invalide" });
+    }
   }
 
   static async findAllDemandeDevis(req, res) {
