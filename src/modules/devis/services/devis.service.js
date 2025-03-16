@@ -16,6 +16,7 @@ const getDemandeDevis = async (
   const demandes = await DemandeDevis.find(filter)
     .skip(pagination.skip)
     .limit(pagination.limit)
+    .sort({ dateDemande: -1 })
     .populate({
       path: "vehicule",
       populate: [
@@ -62,7 +63,7 @@ const getStatDemandeDevisByStatus = async (filter = {}) => {
   }, {});
 
   return allStatus.map((s) => ({
-    value: s,
+    value: parseInt(s),
     count: formattedData[s] || 0,
     label: DEMANDE_DEVIS_STATUS[s],
   }));
