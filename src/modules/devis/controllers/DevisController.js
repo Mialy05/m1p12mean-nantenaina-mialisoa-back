@@ -1,4 +1,8 @@
 const Vehicule = require("../../../models/Vehicule");
+const { PAGINATION_ROW } = require("../../../shared/constants/constant");
+const {
+  UTILISATEUR_ROLES,
+} = require("../../auth/constant/utilisateur.constant");
 const { findUtilisateurById } = require("../../auth/services/auth.service");
 const {
   findVehiculeById,
@@ -47,20 +51,76 @@ class DevisController {
   }
 
   static async findAllDemandeDevis(req, res) {
-    const demandes = await DemandeDevis.find().populate({
-      path: "vehicule",
-      populate: [
+    const {
+      status,
+      userId,
+      immatriculation = "",
+      nom = "",
+      page = 1,
+      limit = PAGINATION_ROW,
+    } = req.query;
+    console.log(req.userId, req.userRole);
+
+    const filter = {
+      "vehicule.immatriculation": {
+        $regex: `^${immatriculation}`,
+        $options: "i",
+      },
+    };
+    if (status) {
+      filter.status = status;
+    }
+    if (req.userRole === UTILISATEUR_ROLES.client) {
+      filter["utilisateur.id"] = req.userId;
+    } else if (req.userRole === UTILISATEUR_ROLES.manager) {
+      filter["utilisateur.id"] = userId;
+    }
+
+    const nomParts = nom.split(/\s+/).filter((part) => part.trim() !== "");
+    const searchRegex = nomParts.map((part) => `(?=.*${part})`).join("");
+
+    const pagination = {
+      skip: (page - 1) * limit,
+      limit,
+    };
+
+    const demandes = await DemandeDevis.find({
+      $and: [
+        filter,
         {
-          path: "marque",
-          model: "Marque",
-        },
-        {
-          path: "motorisation",
-          model: "Motorisation",
+          $or: [
+            { "utilisateur.nom": { $regex: searchRegex, $options: "i" } },
+            { "utilisateur.prenom": { $regex: searchRegex, $options: "i" } },
+          ],
         },
       ],
+    })
+      .skip(pagination.skip)
+      .limit(pagination.limit)
+      .populate({
+        path: "vehicule",
+        populate: [
+          {
+            path: "marque",
+            model: "Marque",
+          },
+          {
+            path: "motorisation",
+            model: "Motorisation",
+          },
+        ],
+      });
+    const totalDemandes = await DemandeDevis.countDocuments(filter);
+
+    res.json({
+      isError: false,
+      data: {
+        items: demandes,
+        page,
+        limit,
+        totalPage: Math.ceil(totalDemandes / limit),
+      },
     });
-    res.json(demandes);
   }
   // static async findAllVehicule(req, res) {
   //   const demandes = await Vehicule.find()
