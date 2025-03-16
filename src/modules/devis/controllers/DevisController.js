@@ -7,6 +7,10 @@ const { findUtilisateurById } = require("../../auth/services/auth.service");
 const {
   findVehiculeById,
 } = require("../../vehicules/services/vehicule.service");
+const {
+  getStatDemandeDevisByStatus,
+  getDemandeDevis,
+} = require("../services/devis.service");
 const DemandeDevis = require("./../../../models/DemandeDevis");
 const dayjs = require("dayjs");
 
@@ -59,7 +63,6 @@ class DevisController {
       page = 1,
       limit = PAGINATION_ROW,
     } = req.query;
-    console.log(req.userId, req.userRole);
 
     const filter = {
       "vehicule.immatriculation": {
@@ -79,12 +82,7 @@ class DevisController {
     const nomParts = nom.split(/\s+/).filter((part) => part.trim() !== "");
     const searchRegex = nomParts.map((part) => `(?=.*${part})`).join("");
 
-    const pagination = {
-      skip: (page - 1) * limit,
-      limit,
-    };
-
-    const demandes = await DemandeDevis.find({
+    const finalFilter = {
       $and: [
         filter,
         {
@@ -94,40 +92,31 @@ class DevisController {
           ],
         },
       ],
-    })
-      .skip(pagination.skip)
-      .limit(pagination.limit)
-      .populate({
-        path: "vehicule",
-        populate: [
-          {
-            path: "marque",
-            model: "Marque",
-          },
-          {
-            path: "motorisation",
-            model: "Motorisation",
-          },
-        ],
-      });
-    const totalDemandes = await DemandeDevis.countDocuments(filter);
+    };
+    const { status: filterStatus, ...filterWithoutStatus } = filter;
+
+    const demandes = await getDemandeDevis(finalFilter, page, limit);
+
+    const statsDemandes = await getStatDemandeDevisByStatus({
+      $and: [
+        filterWithoutStatus,
+        {
+          $or: [
+            { "utilisateur.nom": { $regex: searchRegex, $options: "i" } },
+            { "utilisateur.prenom": { $regex: searchRegex, $options: "i" } },
+          ],
+        },
+      ],
+    });
 
     res.json({
       isError: false,
       data: {
-        items: demandes,
-        page,
-        limit,
-        totalPage: Math.ceil(totalDemandes / limit),
+        ...demandes,
+        stats: statsDemandes,
       },
     });
   }
-  // static async findAllVehicule(req, res) {
-  //   const demandes = await Vehicule.find()
-  //     .populate("marque")
-  //     .populate("motorisation");
-  //   res.json(demandes);
-  // }
 }
 
 module.exports = DevisController;
