@@ -1,4 +1,5 @@
 const DemandeDevis = require("../../../models/DemandeDevis");
+const Devis = require("../../../models/Devis");
 const {
   DEMANDE_DEVIS_STATUS,
   PAGINATION_ROW,
@@ -41,6 +42,7 @@ const getDemandeDevis = async (
   };
 };
 
+// TODO: rectifier car ne va pas marcher pour manager
 const getStatDemandeDevisByStatus = async (filter = {}) => {
   const data = await DemandeDevis.aggregate([
     { $match: filter },
@@ -69,4 +71,55 @@ const getStatDemandeDevisByStatus = async (filter = {}) => {
   }));
 };
 
-module.exports = { getStatDemandeDevisByStatus, getDemandeDevis };
+const getDevis = async (filter = {}, page = 1, limit = PAGINATION_ROW) => {
+  console.log(filter);
+
+  const devis = await Devis.aggregate([
+    {
+      $match: filter,
+    },
+    {
+      $skip: (page - 1) * limit,
+    },
+    {
+      $limit: limit,
+    },
+    {
+      $addFields: {
+        total: {
+          $sum: {
+            $map: {
+              input: "$services",
+              as: "service",
+              in: { $multiply: ["$$service.prix", "$$service.heures"] },
+            },
+          },
+        },
+      },
+    },
+    {
+      $project: {
+        client: 1,
+        services: 1,
+        vehicule: 1,
+        numero: 1,
+        date: 1,
+        total: 1,
+      },
+    },
+    {
+      $sort: { date: -1 },
+    },
+  ]);
+  const totalDemandes = await Devis.countDocuments(filter);
+
+  return {
+    items: devis,
+    page,
+    limit,
+    totalItems: totalDemandes,
+    totalPage: Math.ceil(totalDemandes / limit),
+  };
+};
+
+module.exports = { getStatDemandeDevisByStatus, getDemandeDevis, getDevis };

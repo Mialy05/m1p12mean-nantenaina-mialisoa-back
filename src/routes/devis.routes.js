@@ -4,6 +4,8 @@ const DemandeDevisController = require("../modules/devis/controllers/DevisContro
 router.post("/demandes", DemandeDevisController.createDemandeDevis);
 router.post("/", DemandeDevisController.createDevis);
 router.get("/demandes", DemandeDevisController.findAllDemandeDevis);
+router.get("/", DemandeDevisController.findAllDevis);
+
 // router.get("/vehicules", DemandeDevisController.findAllVehicule);
 
 module.exports = router;

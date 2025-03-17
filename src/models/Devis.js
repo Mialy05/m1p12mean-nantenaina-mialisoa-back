@@ -5,6 +5,15 @@ const devisSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  date: {
+    type: String,
+    required: true,
+  },
+  status: {
+    type: Number,
+    required: true,
+    default: 0,
+  },
   client: {
     nom: {
       type: String,
