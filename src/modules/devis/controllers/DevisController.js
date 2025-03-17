@@ -1,5 +1,6 @@
 const Vehicule = require("../../../models/Vehicule");
 const { PAGINATION_ROW } = require("../../../shared/constants/constant");
+const ApiResponse = require("../../../shared/types/ApiResponse");
 const {
   UTILISATEUR_ROLES,
 } = require("../../auth/constant/utilisateur.constant");
@@ -13,6 +14,7 @@ const {
 } = require("../services/devis.service");
 const DemandeDevis = require("./../../../models/DemandeDevis");
 const dayjs = require("dayjs");
+const Devis = require("../../../models/Devis");
 
 class DevisController {
   static async createDemandeDevis(req, res) {
@@ -116,6 +118,23 @@ class DevisController {
         stats: statsDemandes,
       },
     });
+  }
+
+  static async createDevis(req, res) {
+    try {
+      const devis = new Devis(req.body);
+      devis.numero = dayjs().format("YYYYMMDDHHmmss");
+      devis.vehicule.annee = dayjs(req.body.vehicule.annee).get("year");
+
+      await devis.save();
+      // throw new Error("Not implemented");
+      res.json({ message: "Devis créé" });
+    } catch (error) {
+      console.log(error);
+      res
+        .status(500)
+        .json(ApiResponse.error("Une erreur est survenue", error, 500));
+    }
   }
 }
 
