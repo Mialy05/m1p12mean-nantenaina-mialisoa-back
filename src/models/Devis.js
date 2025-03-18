@@ -5,6 +5,11 @@ const devisSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  idDemandeDevis: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "DemandeDevis",
+    required: false,
+  },
   date: {
     type: String,
     required: true,
