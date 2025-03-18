@@ -1,5 +1,6 @@
 const Vehicule = require("../../../models/Vehicule");
 const { PAGINATION_ROW } = require("../../../shared/constants/constant");
+const ApiResponse = require("../../../shared/types/ApiResponse");
 const {
   UTILISATEUR_ROLES,
 } = require("../../auth/constant/utilisateur.constant");
@@ -10,9 +11,11 @@ const {
 const {
   getStatDemandeDevisByStatus,
   getDemandeDevis,
+  getDevis,
 } = require("../services/devis.service");
 const DemandeDevis = require("./../../../models/DemandeDevis");
 const dayjs = require("dayjs");
+const Devis = require("../../../models/Devis");
 
 class DevisController {
   static async createDemandeDevis(req, res) {
@@ -116,6 +119,77 @@ class DevisController {
         stats: statsDemandes,
       },
     });
+  }
+
+  static async createDevis(req, res) {
+    try {
+      const devis = new Devis(req.body);
+      devis.numero = dayjs().format("YYYYMMDDHHmmss");
+      devis.date = new Date();
+      devis.status = 0;
+      devis.vehicule.annee = dayjs(req.body.vehicule.annee).get("year");
+
+      await devis.save();
+      // throw new Error("Not implemented");
+      res.json({ message: "Devis créé" });
+    } catch (error) {
+      console.log(error);
+      res
+        .status(500)
+        .json(ApiResponse.error("Une erreur est survenue", error, 500));
+    }
+  }
+
+  static async findAllDevis(req, res) {
+    const {
+      status,
+      userId,
+      immatriculation = "",
+      nom = "",
+      page = 1,
+      limit = PAGINATION_ROW,
+    } = req.query;
+
+    const filter = {
+      "vehicule.immatriculation": {
+        $regex: `(?=.*${immatriculation})`,
+        $options: "i",
+      },
+    };
+    if (status) {
+      filter.status = status;
+    }
+    if (req.userRole === UTILISATEUR_ROLES.client) {
+      filter["client.id"] = req.userId;
+    } else if (req.userRole === UTILISATEUR_ROLES.manager) {
+      filter["client.id"] = userId;
+    }
+
+    const nomParts = nom.split(/\s+/).filter((part) => part.trim() !== "");
+    const searchRegex = nomParts.map((part) => `(?=.*${part})`).join("");
+
+    const finalFilter = {
+      $and: [
+        filter,
+        {
+          $or: [
+            { "client.nom": { $regex: searchRegex, $options: "i" } },
+            { "client.prenom": { $regex: searchRegex, $options: "i" } },
+          ],
+        },
+      ],
+    };
+    const { status: filterStatus, ...filterWithoutStatus } = filter;
+    try {
+      const devis = await getDevis(finalFilter, page, limit);
+      // TODO: averina jerena apiResponse
+      res.json({
+        data: devis,
+      });
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ message: error.message });
+    }
   }
 }
 
