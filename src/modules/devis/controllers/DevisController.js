@@ -12,6 +12,7 @@ const {
   getStatDemandeDevisByStatus,
   getDemandeDevis,
   getDevis,
+  getStatDevisByStatus,
 } = require("../services/devis.service");
 const DemandeDevis = require("./../../../models/DemandeDevis");
 const dayjs = require("dayjs");
@@ -69,12 +70,12 @@ class DevisController {
 
     const filter = {
       "vehicule.immatriculation": {
-        $regex: `^${immatriculation}`,
+        $regex: `(?=.*${immatriculation})`,
         $options: "i",
       },
     };
-    if (status) {
-      filter.status = status;
+    if (status && !isNaN(parseInt(status))) {
+      filter.status = parseInt(status);
     }
     if (req.userRole === UTILISATEUR_ROLES.client) {
       filter["utilisateur.id"] = req.userId;
@@ -156,8 +157,8 @@ class DevisController {
         $options: "i",
       },
     };
-    if (status) {
-      filter.status = status;
+    if (status && !isNaN(parseInt(status))) {
+      filter.status = parseInt(status);
     }
     if (req.userRole === UTILISATEUR_ROLES.client) {
       filter["client.id"] = req.userId;
@@ -180,15 +181,25 @@ class DevisController {
       ],
     };
     const { status: filterStatus, ...filterWithoutStatus } = filter;
+
     try {
       const devis = await getDevis(finalFilter, page, limit);
-      // TODO: averina jerena apiResponse
-      res.json({
-        data: devis,
+
+      const statsDevis = await getStatDevisByStatus({
+        $and: [
+          filterWithoutStatus,
+          {
+            $or: [
+              { "client.nom": { $regex: searchRegex, $options: "i" } },
+              { "client.prenom": { $regex: searchRegex, $options: "i" } },
+            ],
+          },
+        ],
       });
+      res.json(ApiResponse.success({ ...devis, stats: statsDevis }));
     } catch (error) {
       console.log(error);
-      res.status(500).json({ message: error.message });
+      res.status(500).json(ApiResponse.error(error.message));
     }
   }
 }

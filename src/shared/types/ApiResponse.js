@@ -1,12 +1,12 @@
 class ApiResponse {
-  items = [];
+  data = [];
   message = "";
   error = null;
   status = 0;
 
   static success(items, message = "", status = 200) {
     const response = new ApiResponse();
-    response.items = items;
+    response.data = items;
     response.message = message;
     response.status = status;
     return response;
