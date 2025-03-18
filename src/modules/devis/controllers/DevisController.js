@@ -13,6 +13,7 @@ const {
   getDemandeDevis,
   getDevis,
   getStatDevisByStatus,
+  getDevisById,
 } = require("../services/devis.service");
 const DemandeDevis = require("./../../../models/DemandeDevis");
 const dayjs = require("dayjs");
@@ -199,6 +200,27 @@ class DevisController {
       res.json(ApiResponse.success({ ...devis, stats: statsDevis }));
     } catch (error) {
       console.log(error);
+      res.status(500).json(ApiResponse.error(error.message));
+    }
+  }
+
+  static async findDevisById(req, res) {
+    const { id } = req.params;
+    const { userRole, userId } = req;
+    try {
+      const devis = await getDevisById(id);
+      if (devis) {
+        if (userRole == UTILISATEUR_ROLES.client && devis.client.id != userId) {
+          res.status(403).json(ApiResponse.error("Ressource interdite."));
+        } else {
+          res.json(ApiResponse.success(devis));
+        }
+      } else {
+        res.status(422).json(ApiResponse.error("Devis introuvable."));
+      }
+    } catch (error) {
+      console.log(error);
+
       res.status(500).json(ApiResponse.error(error.message));
     }
   }

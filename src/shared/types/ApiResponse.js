@@ -1,5 +1,5 @@
 class ApiResponse {
-  data = [];
+  data = null;
   message = "";
   error = null;
   status = 0;

@@ -1,3 +1,4 @@
+const { default: mongoose } = require("mongoose");
 const DemandeDevis = require("../../../models/DemandeDevis");
 const Devis = require("../../../models/Devis");
 const {
@@ -82,8 +83,6 @@ const getStatDemandeDevisByStatus = async (filter = {}) => {
 };
 
 const getDevis = async (filter = {}, page = 1, limit = PAGINATION_ROW) => {
-  console.log(filter);
-
   const devis = await Devis.aggregate([
     {
       $match: filter,
@@ -177,9 +176,100 @@ const getStatDevisByStatus = async (filter = {}) => {
   ];
 };
 
+const getDevisById = async (id) => {
+  const devis = await Devis.aggregate([
+    {
+      $match: {
+        _id: new mongoose.Types.ObjectId(id),
+      },
+    },
+    {
+      $addFields: {
+        services: {
+          $map: {
+            input: "$services",
+            as: "service",
+            in: {
+              $mergeObjects: [
+                "$$service",
+                {
+                  total: { $multiply: ["$$service.prix", "$$service.heures"] },
+                },
+              ],
+            },
+          },
+        },
+      },
+    },
+    {
+      $addFields: {
+        total: {
+          $sum: {
+            $map: {
+              input: "$services",
+              as: "service",
+              in: "$$service.total",
+            },
+          },
+        },
+      },
+    },
+    {
+      $lookup: {
+        from: "marques",
+        localField: "vehicule.marque",
+        foreignField: "_id",
+        as: "vehicule.marqueDetails",
+      },
+    },
+    {
+      $lookup: {
+        from: "motorisations",
+        localField: "vehicule.motorisation",
+        foreignField: "_id",
+        as: "vehicule.motorisationDetails",
+      },
+    },
+    {
+      $project: {
+        _id: 1,
+        client: 1,
+        services: 1,
+        numero: 1,
+        date: 1,
+        status: 1,
+        total: 1,
+        vehicule: {
+          modele: 1,
+          immatriculation: 1,
+          kilometrage: 1,
+          annee: 1,
+          marque: { $arrayElemAt: ["$vehicule.marqueDetails", 0] },
+          motorisation: { $arrayElemAt: ["$vehicule.motorisationDetails", 0] },
+        },
+      },
+    },
+  ]);
+  return devis[0];
+};
+// {
+//   $project: {
+//     vehicule: {
+//       marqueDetails: { $arrayElemAt: ["$vehicule.marqueDetails", 0] },
+//       motorisationDetails: { $arrayElemAt: ["$vehicule.motorisationDetails", 0] },
+//       modele: 1,
+//       immatriculation: 1,
+//       kilometrage: 1,
+//       annee: 1,
+//     },
+//     services: 1,
+//     total: 1,
+//   },
+// }
 module.exports = {
   getStatDemandeDevisByStatus,
   getDemandeDevis,
   getDevis,
   getStatDevisByStatus,
+  getDevisById,
 };
