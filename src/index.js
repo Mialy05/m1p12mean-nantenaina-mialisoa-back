@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const authMiddleware = require("./shared/middlewares/auth.middleware.js");
+const DevisController = require("./modules/devis/controllers/DevisController.js");
 
 require("dotenv").configDotenv();
 const PORT = process.env.PORT || 5555;
@@ -19,6 +20,7 @@ app.use("/marques", require("./routes/marque.routes.js"));
 app.use("/vehicules", require("./routes/vehicule.routes.js"));
 app.use("/services", require("./routes/service.routes.js"));
 app.use("/rdv", require("./routes/rdv.routes.js"));
+app.get("/test/:id/pdf", DevisController.generatePDF);
 
 mongoose
   .connect(process.env.MONGO_URL, {

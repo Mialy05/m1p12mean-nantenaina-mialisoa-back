@@ -14,6 +14,8 @@ const {
   getDevis,
   getStatDevisByStatus,
   getDevisById,
+  generateStreamDevisPDF,
+  generateDevisPDF,
 } = require("../services/devis.service");
 const DemandeDevis = require("./../../../models/DemandeDevis");
 const dayjs = require("dayjs");
@@ -222,6 +224,42 @@ class DevisController {
       console.log(error);
 
       res.status(500).json(ApiResponse.error(error.message));
+    }
+  }
+
+  static async generatePDF(req, res) {
+    const { id } = req.params;
+    const { userId, userRole } = req;
+    try {
+      const devis = await getDevisById(id);
+
+      // TODO: refactor ?
+      if (userRole === UTILISATEUR_ROLES.client && devis.client.id !== userId) {
+        return res.status(403).json(ApiResponse.error("Ressource interdite."));
+      }
+
+      if (devis) {
+        const doc = await generateDevisPDF(devis);
+        if (doc) {
+          res.setHeader("Content-Type", "application/pdf");
+          res.setHeader(
+            "Content-Disposition",
+            `attachment; filename=DEVIS-${devis.vehicule.immatriculation}-${devis.numero}.pdf`
+          );
+          doc.pipe(res);
+          doc.end();
+        } else {
+          res
+            .status(500)
+            .json(ApiResponse.error("Erreur lors de la génération du PDF."));
+        }
+      } else {
+        res.status(404).json({ error: "Devis introuvable." });
+      }
+    } catch (error) {
+      console.error(error);
+
+      res.status(500).json({ error: "Erreur lors de la génération du PDF." });
     }
   }
 }
