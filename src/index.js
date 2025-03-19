@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const authMiddleware = require("./shared/middlewares/auth.middleware.js");
+const loggerMiddleware = require("./shared/middlewares/logger.middleware.js");
 
 require("dotenv").configDotenv();
 const PORT = process.env.PORT || 5555;
@@ -9,6 +10,7 @@ const PORT = process.env.PORT || 5555;
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use(loggerMiddleware);
 
 app.use("/test", require("./routes/test"));
 app.use("/auth", require("./routes/auth.routes.js"));

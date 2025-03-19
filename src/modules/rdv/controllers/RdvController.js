@@ -5,20 +5,45 @@ const ApiResponse = require("../../../shared/types/ApiResponse");
 const Intervention = require("../../../models/Intervention");
 const Tache = require("../../../models/Tache");
 const mongoose = require("mongoose");
+const { DEVIS_WAIT_RDV } = require("../../../shared/constants/constant");
 
 class RdvController {
   static async createDemandeRdv(req, res) {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    const idDevis = req.body.idDevis;
+    if (!idDevis) {
+      res.status(400).json(ApiResponse.error("Devis introuvable"));
+      return;
+    }
     try {
+      const devis = await Devis.findOne({ _id: idDevis });
+      if (!devis) {
+        res.status(400).json(ApiResponse.error("Devis introuvable"));
+        return;
+      }
+      if (devis.status !== 0) {
+        res.status(400).json(ApiResponse.error("Devis déjà validé"));
+        return;
+      }
+      devis.status = DEVIS_WAIT_RDV;
+      await devis.save({ session });
+
       const rdv = new RendezVous();
-      rdv.devis = req.body.idDevis;
+      rdv.devis = idDevis;
       rdv.dateCreation = dayjs();
-      await rdv.save();
+      await rdv.save({ session });
+
+      await session.commitTransaction();
       res.json(ApiResponse.success(rdv, "Rendez-vous créé avec succès"));
     } catch (error) {
       console.error(error);
+      await session.abortTransaction();
       res.json(
         ApiResponse.error("Erreur lors de la création du rendez-vous", error)
       );
+    } finally {
+      await session.endSession();
     }
   }
 
