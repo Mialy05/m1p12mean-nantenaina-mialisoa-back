@@ -7,7 +7,6 @@ const {
 require("dotenv").configDotenv();
 
 const secretKey = process.env.JWT_SECRET;
-console.log(secretKey, "******");
 
 const generateJWTToken = (role = UTILISATEUR_ROLES.client) => {
   const userData = {

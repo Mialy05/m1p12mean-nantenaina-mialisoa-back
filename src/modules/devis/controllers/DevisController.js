@@ -16,6 +16,7 @@ const {
   getDevisById,
   generateStreamDevisPDF,
   generateDevisPDF,
+  getDemandeDevisById,
 } = require("../services/devis.service");
 const DemandeDevis = require("./../../../models/DemandeDevis");
 const dayjs = require("dayjs");
@@ -267,6 +268,22 @@ class DevisController {
       console.error(error);
 
       res.status(500).json({ error: "Erreur lors de la génération du PDF." });
+    }
+  }
+
+  static async findDemandeDevisById(req, res) {
+    const { id } = req.params;
+    try {
+      console.log(id);
+
+      const demande = await getDemandeDevisById(id);
+      if (demande) {
+        res.json(ApiResponse.success(demande));
+      } else {
+        res.status(422).json(ApiResponse.error("Demande introuvable"));
+      }
+    } catch (error) {
+      res.status(500).json(ApiResponse.error(error.message));
     }
   }
 }

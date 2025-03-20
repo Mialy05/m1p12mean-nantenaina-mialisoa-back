@@ -1,4 +1,4 @@
-const { default: mongoose } = require("mongoose");
+const { default: mongoose, Mongoose } = require("mongoose");
 const DemandeDevis = require("../../../models/DemandeDevis");
 const Devis = require("../../../models/Devis");
 const {
@@ -56,7 +56,6 @@ const getDemandeDevis = async (
   };
 };
 
-// TODO: rectifier car ne va pas marcher pour manager
 const getStatDemandeDevisByStatus = async (
   filter = {},
   role = UTILISATEUR_ROLES.client
@@ -154,7 +153,7 @@ const getDevis = async (filter = {}, page = 1, limit = PAGINATION_ROW) => {
   };
 };
 
-// TODO: rectifier car ne va pas marcher pour manager
+// TODO: verify stats pour manager
 const getStatDevisByStatus = async (
   filter = {},
   role = UTILISATEUR_ROLES.client
@@ -469,6 +468,25 @@ const generateDevisPDF = async (devis) => {
   return doc;
 };
 
+const getDemandeDevisById = async (id) => {
+  const demande = await DemandeDevis.findOne({
+    _id: new mongoose.Types.ObjectId(id),
+  }).populate({
+    path: "vehicule",
+    populate: [
+      {
+        path: "marque",
+        model: "Marque",
+      },
+      {
+        path: "motorisation",
+        model: "Motorisation",
+      },
+    ],
+  });
+  return demande;
+};
+
 module.exports = {
   getStatDemandeDevisByStatus,
   getDemandeDevis,
@@ -476,4 +494,5 @@ module.exports = {
   getStatDevisByStatus,
   getDevisById,
   generateDevisPDF,
+  getDemandeDevisById,
 };
