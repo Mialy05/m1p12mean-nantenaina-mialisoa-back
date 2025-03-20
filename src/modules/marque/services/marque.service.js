@@ -1,9 +1,9 @@
-import Marque from "../../../models/Marque.js";
+const Marque = require("../../../models/Marque");
 
-export const findAllMarque = async () => {
+const findAllMarque = async () => {
   return Marque.find();
 };
 
-// module.exports = {
-//   findAllMarque,
-// };
+module.exports = {
+  findAllMarque,
+};

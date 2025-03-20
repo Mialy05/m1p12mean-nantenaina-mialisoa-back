@@ -53,7 +53,6 @@ class DevisController {
       demande.utilisateur.telephone = utilisateur.telephone;
 
       demande.vehiculeId = undefined;
-      console.log("demande", demande);
 
       await demande.save();
 
@@ -84,7 +83,7 @@ class DevisController {
     }
     if (req.userRole === UTILISATEUR_ROLES.client) {
       filter["utilisateur.id"] = req.userId;
-    } else if (req.userRole === UTILISATEUR_ROLES.manager) {
+    } else if (req.userRole === UTILISATEUR_ROLES.manager && userId) {
       filter["utilisateur.id"] = userId;
     }
 
@@ -106,17 +105,20 @@ class DevisController {
 
     const demandes = await getDemandeDevis(finalFilter, page, limit);
 
-    const statsDemandes = await getStatDemandeDevisByStatus({
-      $and: [
-        filterWithoutStatus,
-        {
-          $or: [
-            { "utilisateur.nom": { $regex: searchRegex, $options: "i" } },
-            { "utilisateur.prenom": { $regex: searchRegex, $options: "i" } },
-          ],
-        },
-      ],
-    });
+    const statsDemandes = await getStatDemandeDevisByStatus(
+      {
+        $and: [
+          filterWithoutStatus,
+          {
+            $or: [
+              { "utilisateur.nom": { $regex: searchRegex, $options: "i" } },
+              { "utilisateur.prenom": { $regex: searchRegex, $options: "i" } },
+            ],
+          },
+        ],
+      },
+      req.userRole
+    );
 
     res.json({
       isError: false,
@@ -167,7 +169,7 @@ class DevisController {
     }
     if (req.userRole === UTILISATEUR_ROLES.client) {
       filter["client.id"] = req.userId;
-    } else if (req.userRole === UTILISATEUR_ROLES.manager) {
+    } else if (req.userRole === UTILISATEUR_ROLES.manager && userId) {
       filter["client.id"] = userId;
     }
 
@@ -190,17 +192,20 @@ class DevisController {
     try {
       const devis = await getDevis(finalFilter, page, limit);
 
-      const statsDevis = await getStatDevisByStatus({
-        $and: [
-          filterWithoutStatus,
-          {
-            $or: [
-              { "client.nom": { $regex: searchRegex, $options: "i" } },
-              { "client.prenom": { $regex: searchRegex, $options: "i" } },
-            ],
-          },
-        ],
-      });
+      const statsDevis = await getStatDevisByStatus(
+        {
+          $and: [
+            filterWithoutStatus,
+            {
+              $or: [
+                { "client.nom": { $regex: searchRegex, $options: "i" } },
+                { "client.prenom": { $regex: searchRegex, $options: "i" } },
+              ],
+            },
+          ],
+        },
+        req.userRole
+      );
       res.json(ApiResponse.success({ ...devis, stats: statsDevis }));
     } catch (error) {
       console.log(error);
