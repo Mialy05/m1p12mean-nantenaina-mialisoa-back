@@ -127,7 +127,7 @@ class DevisController {
     try {
       const devis = new Devis(req.body);
       devis.numero = dayjs().format("YYYYMMDDHHmmss");
-      devis.date = new Date();
+      devis.date = dayjs().toISOString();
       devis.status = 0;
       devis.vehicule.annee = dayjs(req.body.vehicule.annee).get("year");
 

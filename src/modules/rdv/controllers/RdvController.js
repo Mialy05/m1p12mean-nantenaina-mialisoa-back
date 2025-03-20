@@ -6,6 +6,14 @@ const Intervention = require("../../../models/Intervention");
 const Tache = require("../../../models/Tache");
 const mongoose = require("mongoose");
 const { DEVIS_WAIT_RDV } = require("../../../shared/constants/constant");
+const {
+  findAllRdv,
+  findAllDemandeRdv,
+  findAllAcceptedRdv,
+} = require("../services/rdv.service");
+const {
+  findAllDemandeDevis,
+} = require("../../devis/controllers/DevisController");
 
 class RdvController {
   static async createDemandeRdv(req, res) {
@@ -94,6 +102,40 @@ class RdvController {
       );
     } finally {
       await session.endSession();
+    }
+  }
+
+  static async getAllDemandeRdv(req, res) {
+    try {
+      const data = await findAllDemandeRdv();
+      res.json(ApiResponse.success(data, "Rendez-vous récupérés avec succès"));
+    } catch (error) {
+      console.error(error);
+      res
+        .status(500)
+        .json(
+          ApiResponse.error("Erreur lors de la récupération des RDV", error)
+        );
+    }
+  }
+  static async getAllAcceptedRdv(req, res) {
+    try {
+      const startDate = req.query.startDate
+        ? dayjs(req.query.startDate, "YYYY-MM-DD")
+        : dayjs().startOf("year");
+      const endDate = req.query.endDate
+        ? dayjs(req.query.endDate, "YYYY-MM-DD")
+        : dayjs().endOf("year");
+      console.log(startDate.toISOString(), endDate.toISOString());
+      const data = await findAllAcceptedRdv(startDate, endDate);
+      res.json(ApiResponse.success(data, "Rendez-vous récupérés avec succès"));
+    } catch (error) {
+      console.error(error);
+      res
+        .status(500)
+        .json(
+          ApiResponse.error("Erreur lors de la récupération des RDV", error)
+        );
     }
   }
 }
