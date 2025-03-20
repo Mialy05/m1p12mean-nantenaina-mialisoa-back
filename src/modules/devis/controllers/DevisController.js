@@ -49,6 +49,8 @@ class DevisController {
       demande.utilisateur.id = utilisateur.id;
       demande.utilisateur.nom = utilisateur.nom;
       demande.utilisateur.prenom = utilisateur.prenom;
+      demande.utilisateur.email = utilisateur.email;
+      demande.utilisateur.telephone = utilisateur.telephone;
 
       demande.vehiculeId = undefined;
       console.log("demande", demande);

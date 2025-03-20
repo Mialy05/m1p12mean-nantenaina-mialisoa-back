@@ -24,6 +24,10 @@ const utilisateurSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  telephone: {
+    type: String,
+    required: true,
+  },
   status: {
     type: Number,
     required: true,
