@@ -24,7 +24,11 @@ app.use("/marques", require("./routes/marque.routes.js"));
 app.use("/vehicules", require("./routes/vehicule.routes.js"));
 app.use("/services", require("./routes/service.routes.js"));
 app.use("/rdv", require("./routes/rdv.routes.js"));
-app.get("/test/:id/pdf", DevisController.generatePDF);
+app.use(
+  "/interventions",
+  authMiddleware,
+  require("./routes/intervention.routes.js")
+);
 
 app.use("/mock/rdv", async (req, res) => {
   const rdv = await RendezVous.find().populate("devis");
