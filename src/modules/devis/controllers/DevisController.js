@@ -21,6 +21,7 @@ const {
 const DemandeDevis = require("./../../../models/DemandeDevis");
 const dayjs = require("dayjs");
 const Devis = require("../../../models/Devis");
+const { default: mongoose } = require("mongoose");
 
 class DevisController {
   static async createDemandeDevis(req, res) {
@@ -131,21 +132,34 @@ class DevisController {
   }
 
   static async createDevis(req, res) {
+    const session = await mongoose.startSession();
+    session.startTransaction();
     try {
+      const idDemande = req.body.idDemande;
+      const demande = await DemandeDevis.findById(idDemande);
+      if (demande) {
+        demande.status = 5;
+        await demande.save({ session });
+      }
+
       const devis = new Devis(req.body);
       devis.numero = dayjs().format("YYYYMMDDHHmmss");
       devis.date = dayjs().toISOString();
       devis.status = 0;
       devis.vehicule.annee = dayjs(req.body.vehicule.annee).get("year");
 
-      await devis.save();
+      await devis.save({ session });
+      await session.commitTransaction();
       // throw new Error("Not implemented");
       res.json({ message: "Devis créé" });
     } catch (error) {
+      await session.abortTransaction();
       console.log(error);
       res
         .status(500)
         .json(ApiResponse.error("Une erreur est survenue", error, 500));
+    } finally {
+      await session.endSession();
     }
   }
 
