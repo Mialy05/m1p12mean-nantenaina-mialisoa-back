@@ -1,16 +1,20 @@
-const { default: mongoose } = require("mongoose");
+const { default: mongoose, Mongoose } = require("mongoose");
 const DemandeDevis = require("../../../models/DemandeDevis");
 const Devis = require("../../../models/Devis");
 const {
-  DEMANDE_DEVIS_STATUS,
   PAGINATION_ROW,
-  DEVIS_STATUS,
-  NOM_GARAGE,
   GARAGE,
 } = require("../../../shared/constants/constant");
 const PDFDocument = require("pdfkit-table");
 const dayjs = require("dayjs");
 const { formatNumber } = require("../../../shared/helpers/number");
+const {
+  UTILISATEUR_ROLES,
+} = require("../../auth/constant/utilisateur.constant");
+const {
+  getStatusDemandeDevisValues,
+  getStatusDevisValues,
+} = require("../../../shared/helpers/status");
 require("dayjs/locale/fr");
 dayjs.locale("fr");
 
@@ -23,6 +27,7 @@ const getDemandeDevis = async (
     skip: (page - 1) * limit,
     limit,
   };
+
   const demandes = await DemandeDevis.find(filter)
     .skip(pagination.skip)
     .limit(pagination.limit)
@@ -51,8 +56,10 @@ const getDemandeDevis = async (
   };
 };
 
-// TODO: rectifier car ne va pas marcher pour manager
-const getStatDemandeDevisByStatus = async (filter = {}) => {
+const getStatDemandeDevisByStatus = async (
+  filter = {},
+  role = UTILISATEUR_ROLES.client
+) => {
   const data = await DemandeDevis.aggregate([
     { $match: filter },
     {
@@ -66,7 +73,8 @@ const getStatDemandeDevisByStatus = async (filter = {}) => {
     },
   ]);
 
-  const allStatus = Object.keys(DEMANDE_DEVIS_STATUS);
+  const DEMANDE_STATUS = getStatusDemandeDevisValues(role);
+  const allStatus = Object.keys(DEMANDE_STATUS);
   let total = 0;
 
   const formattedData = {};
@@ -84,7 +92,7 @@ const getStatDemandeDevisByStatus = async (filter = {}) => {
     ...allStatus.map((s) => ({
       value: parseInt(s),
       count: formattedData[s] || 0,
-      label: DEMANDE_DEVIS_STATUS[s],
+      label: DEMANDE_STATUS[s],
     })),
   ];
 };
@@ -145,8 +153,11 @@ const getDevis = async (filter = {}, page = 1, limit = PAGINATION_ROW) => {
   };
 };
 
-// TODO: rectifier car ne va pas marcher pour manager
-const getStatDevisByStatus = async (filter = {}) => {
+// TODO: verify stats pour manager
+const getStatDevisByStatus = async (
+  filter = {},
+  role = UTILISATEUR_ROLES.client
+) => {
   const data = await Devis.aggregate([
     { $match: filter },
     {
@@ -160,6 +171,7 @@ const getStatDevisByStatus = async (filter = {}) => {
     },
   ]);
 
+  const DEVIS_STATUS = getStatusDevisValues(role);
   const allStatus = Object.keys(DEVIS_STATUS);
   let total = 0;
 
@@ -456,6 +468,25 @@ const generateDevisPDF = async (devis) => {
   return doc;
 };
 
+const getDemandeDevisById = async (id) => {
+  const demande = await DemandeDevis.findOne({
+    _id: new mongoose.Types.ObjectId(id),
+  }).populate({
+    path: "vehicule",
+    populate: [
+      {
+        path: "marque",
+        model: "Marque",
+      },
+      {
+        path: "motorisation",
+        model: "Motorisation",
+      },
+    ],
+  });
+  return demande;
+};
+
 module.exports = {
   getStatDemandeDevisByStatus,
   getDemandeDevis,
@@ -463,4 +494,5 @@ module.exports = {
   getStatDevisByStatus,
   getDevisById,
   generateDevisPDF,
+  getDemandeDevisById,
 };

@@ -5,6 +5,7 @@ const DemandeDevisController = require("../modules/devis/controllers/DevisContro
 router.post("/demandes", DemandeDevisController.createDemandeDevis);
 router.post("/", DemandeDevisController.createDevis);
 router.get("/demandes", DemandeDevisController.findAllDemandeDevis);
+router.get("/demandes/:id", DemandeDevisController.findDemandeDevisById);
 router.get("/", DemandeDevisController.findAllDevis);
 router.get("/:id", DemandeDevisController.findDevisById);
 router.get("/:id/pdf", DevisController.generatePDF);

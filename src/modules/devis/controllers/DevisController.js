@@ -16,6 +16,7 @@ const {
   getDevisById,
   generateStreamDevisPDF,
   generateDevisPDF,
+  getDemandeDevisById,
 } = require("../services/devis.service");
 const DemandeDevis = require("./../../../models/DemandeDevis");
 const dayjs = require("dayjs");
@@ -53,7 +54,6 @@ class DevisController {
       demande.utilisateur.telephone = utilisateur.telephone;
 
       demande.vehiculeId = undefined;
-      console.log("demande", demande);
 
       await demande.save();
 
@@ -84,7 +84,7 @@ class DevisController {
     }
     if (req.userRole === UTILISATEUR_ROLES.client) {
       filter["utilisateur.id"] = req.userId;
-    } else if (req.userRole === UTILISATEUR_ROLES.manager) {
+    } else if (req.userRole === UTILISATEUR_ROLES.manager && userId) {
       filter["utilisateur.id"] = userId;
     }
 
@@ -106,17 +106,20 @@ class DevisController {
 
     const demandes = await getDemandeDevis(finalFilter, page, limit);
 
-    const statsDemandes = await getStatDemandeDevisByStatus({
-      $and: [
-        filterWithoutStatus,
-        {
-          $or: [
-            { "utilisateur.nom": { $regex: searchRegex, $options: "i" } },
-            { "utilisateur.prenom": { $regex: searchRegex, $options: "i" } },
-          ],
-        },
-      ],
-    });
+    const statsDemandes = await getStatDemandeDevisByStatus(
+      {
+        $and: [
+          filterWithoutStatus,
+          {
+            $or: [
+              { "utilisateur.nom": { $regex: searchRegex, $options: "i" } },
+              { "utilisateur.prenom": { $regex: searchRegex, $options: "i" } },
+            ],
+          },
+        ],
+      },
+      req.userRole
+    );
 
     res.json({
       isError: false,
@@ -167,7 +170,7 @@ class DevisController {
     }
     if (req.userRole === UTILISATEUR_ROLES.client) {
       filter["client.id"] = req.userId;
-    } else if (req.userRole === UTILISATEUR_ROLES.manager) {
+    } else if (req.userRole === UTILISATEUR_ROLES.manager && userId) {
       filter["client.id"] = userId;
     }
 
@@ -190,17 +193,20 @@ class DevisController {
     try {
       const devis = await getDevis(finalFilter, page, limit);
 
-      const statsDevis = await getStatDevisByStatus({
-        $and: [
-          filterWithoutStatus,
-          {
-            $or: [
-              { "client.nom": { $regex: searchRegex, $options: "i" } },
-              { "client.prenom": { $regex: searchRegex, $options: "i" } },
-            ],
-          },
-        ],
-      });
+      const statsDevis = await getStatDevisByStatus(
+        {
+          $and: [
+            filterWithoutStatus,
+            {
+              $or: [
+                { "client.nom": { $regex: searchRegex, $options: "i" } },
+                { "client.prenom": { $regex: searchRegex, $options: "i" } },
+              ],
+            },
+          ],
+        },
+        req.userRole
+      );
       res.json(ApiResponse.success({ ...devis, stats: statsDevis }));
     } catch (error) {
       console.log(error);
@@ -262,6 +268,22 @@ class DevisController {
       console.error(error);
 
       res.status(500).json({ error: "Erreur lors de la génération du PDF." });
+    }
+  }
+
+  static async findDemandeDevisById(req, res) {
+    const { id } = req.params;
+    try {
+      console.log(id);
+
+      const demande = await getDemandeDevisById(id);
+      if (demande) {
+        res.json(ApiResponse.success(demande));
+      } else {
+        res.status(422).json(ApiResponse.error("Demande introuvable"));
+      }
+    } catch (error) {
+      res.status(500).json(ApiResponse.error(error.message));
     }
   }
 }
