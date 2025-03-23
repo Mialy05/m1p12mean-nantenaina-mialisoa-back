@@ -2,14 +2,18 @@ const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const authMiddleware = require("./shared/middlewares/auth.middleware.js");
+const loggerMiddleware = require("./shared/middlewares/logger.middleware.js");
+const RendezVous = require("./models/RendezVous.js");
 const DevisController = require("./modules/devis/controllers/DevisController.js");
 
 require("dotenv").configDotenv();
 const PORT = process.env.PORT || 5555;
 
 const app = express();
+mongoose.set("debug", true);
 app.use(cors());
 app.use(express.json());
+app.use(loggerMiddleware);
 
 app.use("/test", require("./routes/test"));
 app.use("/auth", require("./routes/auth.routes.js"));
@@ -21,6 +25,12 @@ app.use("/vehicules", require("./routes/vehicule.routes.js"));
 app.use("/services", require("./routes/service.routes.js"));
 app.use("/rdv", require("./routes/rdv.routes.js"));
 app.get("/test/:id/pdf", DevisController.generatePDF);
+
+app.use("/mock/rdv", async (req, res) => {
+  const rdv = await RendezVous.find().populate("devis");
+  console.log(rdv);
+  res.json(rdv);
+});
 
 mongoose
   .connect(process.env.MONGO_URL, {
