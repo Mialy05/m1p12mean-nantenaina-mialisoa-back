@@ -1,8 +1,10 @@
 const jwt = require("jsonwebtoken");
 const Utilisateur = require("../../../models/Utilisateur");
 const { UTILISATEUR_STATUS } = require("../constant/utilisateur.constant");
+require("dotenv").configDotenv();
 
 const secretKey = process.env.JWT_SECRET;
+console.log(secretKey, "******");
 
 const generateJWTToken = () => {
   const userData = {
