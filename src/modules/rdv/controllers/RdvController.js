@@ -71,6 +71,7 @@ class RdvController {
 
       const devis = await Devis.findOne({ _id: idDevis });
       devis.status = 10;
+      await devis.save({ session });
 
       const intervention = new Intervention();
       intervention.vehicule = devis.vehicule;
