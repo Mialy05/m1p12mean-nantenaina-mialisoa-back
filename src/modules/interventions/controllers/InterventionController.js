@@ -1,6 +1,9 @@
 const { PAGINATION_ROW } = require("../../../shared/constants/constant");
 const ApiResponse = require("../../../shared/types/ApiResponse");
-const { findAllInterventions } = require("../services/intervention.service");
+const {
+  findAllInterventions,
+  findInterventionById,
+} = require("../services/intervention.service");
 
 class InterventionController {
   static async findAll(req, res) {
@@ -19,9 +22,9 @@ class InterventionController {
       },
     };
 
-    // if (req.userRole === UTILISATEUR_ROLES.client) {
-    //   filter["utilisateur.id"] = req.userId;
-    // } else if (req.userRole === UTILISATEUR_ROLES.manager && userId) {
+    // if (req.query.userRole === UTILISATEUR_ROLES.client) {
+    //   filter["utilisateur.id"] = req.query.userId;
+    // } else if (req.query.userRole === UTILISATEUR_ROLES.manager && userId) {
     //   filter["utilisateur.id"] = userId;
     // }
 
@@ -46,10 +49,27 @@ class InterventionController {
         finalFilter,
         parseInt(page) || 1,
         parseInt(limit) || PAGINATION_ROW,
-        req.userRole,
-        req.userId
+        req.query.userRole,
+        req.query.userId
       );
       res.json(ApiResponse.success(interventions));
+    } catch (error) {
+      console.log(error);
+      res.status(500).json(ApiResponse.error(error.message));
+    }
+  }
+
+  static async findById(req, res) {
+    const { id } = req.params;
+    const { userRole } = req.query;
+
+    try {
+      const intervention = await findInterventionById(id, userRole);
+      if (intervention) {
+        res.json(ApiResponse.success(intervention));
+      } else {
+        res.status(422).json(ApiResponse.error(`Intervention non trouvée`));
+      }
     } catch (error) {
       console.log(error);
       res.status(500).json(ApiResponse.error(error.message));

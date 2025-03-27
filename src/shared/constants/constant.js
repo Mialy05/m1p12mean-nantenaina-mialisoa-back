@@ -36,6 +36,13 @@ const GARAGE = {
   email: "test@test.com",
 };
 
+const TACHE_STATUS = {
+  "-5": "Supprimer",
+  0: "A faire",
+  5: "En cours",
+  10: "Terminé",
+};
+
 module.exports = {
   PAGINATION_ROW,
   DEMANDE_DEVIS_STATUS,
@@ -45,4 +52,5 @@ module.exports = {
   DEVIS_RDV,
   DEVIS_DELETED,
   GARAGE,
+  TACHE_STATUS,
 };
