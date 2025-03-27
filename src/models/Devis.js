@@ -20,6 +20,11 @@ const devisSchema = new mongoose.Schema({
     default: 0,
   },
   client: {
+    _id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Utilisateur",
+      required: true,
+    },
     nom: {
       type: String,
       required: true,
@@ -54,6 +59,11 @@ const devisSchema = new mongoose.Schema({
     },
   ],
   vehicule: {
+    _id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Vehicule",
+      required: true,
+    },
     marque: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Marque",

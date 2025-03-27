@@ -25,42 +25,48 @@ const { default: mongoose } = require("mongoose");
 
 class DevisController {
   static async createDemandeDevis(req, res) {
-    const annee = dayjs(req.body.vehicule.annee);
-    req.body.vehicule.annee = annee.get("year");
-    const demande = new DemandeDevis(req.body);
-    demande.status = 0;
+    const session = await mongoose.startSession();
+    await session.startTransaction();
 
-    demande.dateDemande = new Date();
+    try {
+      const utilisateur = await findUtilisateurById(req.userId);
+      if (!utilisateur) {
+        await session.abortTransaction();
+        res
+          .status(403)
+          .json({ isError: true, message: "Utilisateur invalide" });
+      }
+      const annee = dayjs(req.body.vehicule.annee);
+      req.body.vehicule.annee = annee.get("year");
+      const { vehiculeId, _id, ...demandeData } = req.body;
+      const demande = new DemandeDevis(demandeData);
+      demande.status = 0;
+      demande.dateDemande = dayjs();
+      demande.utilisateur = utilisateur;
 
-    if (req.body.saveVehicule) {
-      const vehicule = new Vehicule(req.body.vehicule);
-      await vehicule.save();
-      demande.vehiculeId = vehicule;
-    }
+      if (vehiculeId === "0") {
+        const vehicule = new Vehicule(req.body.vehicule);
+        demande.vehicule = vehicule;
+        vehicule.utilisateur = utilisateur.id;
+        await vehicule.save({ session });
+      } else {
+        const vehicule = await findVehiculeById(vehiculeId);
+        demande.vehicule = vehicule;
+      }
 
-    if (demande.vehiculeId) {
-      const vehicule = await findVehiculeById(demande.vehiculeId);
-      demande.vehicule = vehicule;
-      demande.vehicule.marque = vehicule.marque.nom;
-      demande.vehicule.motorisation = vehicule.motorisation.nom;
-    }
+      console.log(demande);
+      await demande.save({ session });
 
-    const utilisateur = await findUtilisateurById(req.userId);
-    if (utilisateur) {
-      demande.utilisateur = {};
-      demande.utilisateur.id = utilisateur.id;
-      demande.utilisateur.nom = utilisateur.nom;
-      demande.utilisateur.prenom = utilisateur.prenom;
-      demande.utilisateur.email = utilisateur.email;
-      demande.utilisateur.telephone = utilisateur.telephone;
-
-      demande.vehiculeId = undefined;
-
-      await demande.save();
-
+      await session.commitTransaction();
       res.json({ message: "Demande de devis créée" });
-    } else {
-      res.status(403).json({ isError: true, message: "Utilisateur invalide" });
+    } catch (error) {
+      console.log(error);
+      await session.abortTransaction();
+      res
+        .status(500)
+        .json(ApiResponse.error("Une erreur est survenue", error, 500));
+    } finally {
+      await session.endSession();
     }
   }
 
@@ -84,9 +90,9 @@ class DevisController {
       filter.status = parseInt(status);
     }
     if (req.userRole === UTILISATEUR_ROLES.client) {
-      filter["utilisateur.id"] = req.userId;
+      filter["utilisateur._id"] = new mongoose.Types.ObjectId(req.userId);
     } else if (req.userRole === UTILISATEUR_ROLES.manager && userId) {
-      filter["utilisateur.id"] = userId;
+      filter["utilisateur._id"] = new mongoose.Types.ObjectId(req.userId);
     }
 
     const nomParts = nom.split(/\s+/).filter((part) => part.trim() !== "");
@@ -137,10 +143,11 @@ class DevisController {
     try {
       const idDemande = req.body.idDemande;
       const demande = await DemandeDevis.findById(idDemande);
-      if (demande) {
-        demande.status = 5;
-        await demande.save({ session });
+      if (!demande) {
+        throw new Error("Demande introuvable");
       }
+      demande.status = 5;
+      await demande.save({ session });
 
       const devis = new Devis(req.body);
       devis.numero = dayjs().format("YYYYMMDDHHmmss");
@@ -149,6 +156,8 @@ class DevisController {
       devis.vehicule.annee = dayjs(req.body.vehicule.annee).get("year");
 
       await devis.save({ session });
+      console.log(req.body.client);
+
       await session.commitTransaction();
       // throw new Error("Not implemented");
       res.json({ message: "Devis créé" });
@@ -183,9 +192,9 @@ class DevisController {
       filter.status = parseInt(status);
     }
     if (req.userRole === UTILISATEUR_ROLES.client) {
-      filter["client.id"] = req.userId;
+      filter["client._id"] = new mongoose.Types.ObjectId(req.userId);
     } else if (req.userRole === UTILISATEUR_ROLES.manager && userId) {
-      filter["client.id"] = userId;
+      filter["client._id"] = new mongoose.Types.ObjectId(req.userId);
     }
 
     const nomParts = nom.split(/\s+/).filter((part) => part.trim() !== "");
@@ -234,7 +243,10 @@ class DevisController {
     try {
       const devis = await getDevisById(id);
       if (devis) {
-        if (userRole == UTILISATEUR_ROLES.client && devis.client.id != userId) {
+        if (
+          userRole == UTILISATEUR_ROLES.client &&
+          devis.client._id != userId
+        ) {
           res.status(403).json(ApiResponse.error("Ressource interdite."));
         } else {
           res.json(ApiResponse.success(devis));
@@ -256,7 +268,9 @@ class DevisController {
       const devis = await getDevisById(id);
 
       // TODO: refactor ?
-      if (userRole === UTILISATEUR_ROLES.client && devis.client.id !== userId) {
+      console.log("devis", devis.client._id, userId);
+
+      if (userRole === UTILISATEUR_ROLES.client && devis.client._id != userId) {
         return res.status(403).json(ApiResponse.error("Ressource interdite."));
       }
 
