@@ -6,4 +6,6 @@ router.get("/", InterventionController.findAll);
 // TODO: manager sy meca ihany
 router.get("/:id", InterventionController.findById);
 
+// TODO: manager ihany
+router.post("/taches/:id/assign", InterventionController.assignTask);
 module.exports = router;

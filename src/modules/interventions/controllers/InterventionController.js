@@ -3,6 +3,7 @@ const ApiResponse = require("../../../shared/types/ApiResponse");
 const {
   findAllInterventions,
   findInterventionById,
+  assignTacheToResponsable,
 } = require("../services/intervention.service");
 
 class InterventionController {
@@ -73,6 +74,21 @@ class InterventionController {
     } catch (error) {
       console.log(error);
       res.status(500).json(ApiResponse.error(error.message));
+    }
+  }
+
+  static async assignTask(req, res) {
+    const { id } = req.params;
+    const { responsables } = req.body;
+    try {
+      await assignTacheToResponsable(id, responsables);
+      res.json(ApiResponse.success("Tâche assignée."));
+    } catch (error) {
+      if (error.cause == 404) {
+        res.status(422).json(ApiResponse.error("Tâche non trouvée."));
+      } else {
+        res.status(500).json(ApiResponse.error(error.message));
+      }
     }
   }
 }

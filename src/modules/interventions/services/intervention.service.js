@@ -8,6 +8,7 @@ const {
 } = require("../../auth/constant/utilisateur.constant");
 const mongoose = require("mongoose");
 const Utilisateurs = require("../../../models/Utilisateur");
+const Tache = require("../../../models/Tache");
 
 const showResponsable = (userRole) => {
   if (userRole === UTILISATEUR_ROLES.client) {
@@ -127,8 +128,6 @@ const getAllowedTransition = (currentStatus) => {
   }
 
   const transitions = {};
-
-  // Ajouter l'action pour avancer d'un statut
   if (currentIndex < statusKeys.length - 1) {
     transitions.next = {
       step: TACHE_STATUS[statusKeys[currentIndex + 1]],
@@ -227,4 +226,32 @@ const findInterventionById = async (idIntervention, userRole) => {
   return intervention;
 };
 
-module.exports = { findAllInterventions, findInterventionById };
+const assignTacheToResponsable = async (idTache, idResponsables) => {
+  const tacheObjectId = new mongoose.Types.ObjectId(idTache);
+  const tache = await Tache.findOne({ _id: tacheObjectId });
+  if (tache) {
+    const respObjectIds = idResponsables.map(
+      (r) => new mongoose.Types.ObjectId(r)
+    );
+    await Tache.updateOne(
+      {
+        _id: tacheObjectId,
+      },
+      {
+        $addToSet: {
+          responsables: {
+            $each: respObjectIds,
+          },
+        },
+      }
+    );
+  } else {
+    throw new Error("Tache n'existe pas", { cause: 404 });
+  }
+};
+
+module.exports = {
+  findAllInterventions,
+  findInterventionById,
+  assignTacheToResponsable,
+};
