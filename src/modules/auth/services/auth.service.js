@@ -8,7 +8,7 @@ require("dotenv").configDotenv();
 
 const secretKey = process.env.JWT_SECRET;
 
-const generateJWTToken = (role = UTILISATEUR_ROLES.client) => {
+const generateJWTTokenRole = (role = UTILISATEUR_ROLES.client) => {
   const userData = {
     id: "67d6c7d3c34d5a3c68c2f570",
     role: role,
@@ -24,6 +24,22 @@ const generateJWTToken = (role = UTILISATEUR_ROLES.client) => {
   return jwt.sign(userData, secretKey, options);
 };
 
+const generateJWTToken = (utilisateur) => {
+  const userData = {
+    id: utilisateur._id,
+    role: utilisateur.role,
+    nom: utilisateur.nom,
+    prenom: utilisateur.prenom,
+    email: utilisateur.email,
+    telephone: utilisateur.telephone,
+  };
+
+  const options = {
+    expiresIn: "2d",
+  };
+  return jwt.sign(userData, secretKey, options);
+};
+
 const findUtilisateurById = async (id) => {
   const utilisateur = await Utilisateur.findOne({
     _id: id,
@@ -32,4 +48,17 @@ const findUtilisateurById = async (id) => {
   return utilisateur;
 };
 
-module.exports = { generateJWTToken, findUtilisateurById };
+const loginService = async (email, pwd) => {
+  const utilisateur = await Utilisateur.findOne({
+    email,
+    pwd,
+    status: UTILISATEUR_STATUS.active,
+  });
+  if (utilisateur) {
+    const token = generateJWTToken(utilisateur);
+    return { token };
+  }
+  throw new Error("Utilisateur non trouvé");
+};
+
+module.exports = { generateJWTTokenRole, findUtilisateurById, loginService };

@@ -163,7 +163,7 @@ const getStatDevisByStatus = async (
     {
       $group: {
         _id: {
-          client: "$client.id",
+          client: "$client._id",
           status: "$status",
         },
         count: { $sum: 1 },

@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const Utilisateur = require("./Utilisateur");
 
 const vehiculeSchema = new mongoose.Schema({
   marque: {
@@ -21,6 +22,11 @@ const vehiculeSchema = new mongoose.Schema({
   },
   immatriculation: {
     type: String,
+    required: true,
+  },
+  utilisateur: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Utilisateur",
     required: true,
   },
 });

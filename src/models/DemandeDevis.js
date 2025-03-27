@@ -1,11 +1,6 @@
 const mongoose = require("mongoose");
 
 const demandeDevisSchema = new mongoose.Schema({
-  vehiculeId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Vehicule",
-    required: false,
-  },
   vehicule: {
     type: Object,
     required: false,
