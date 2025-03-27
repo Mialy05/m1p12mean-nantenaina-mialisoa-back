@@ -45,7 +45,9 @@ class InterventionController {
         userRole,
         finalFilter,
         parseInt(page) || 1,
-        parseInt(limit) || PAGINATION_ROW
+        parseInt(limit) || PAGINATION_ROW,
+        req.userRole,
+        req.userId
       );
       res.json(ApiResponse.success(interventions));
     } catch (error) {

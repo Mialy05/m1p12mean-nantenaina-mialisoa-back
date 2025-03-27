@@ -1,11 +1,34 @@
 const Intervention = require("../../../models/Intervention");
 const { PAGINATION_ROW } = require("../../../shared/constants/constant");
+const {
+  UTILISATEUR_ROLES,
+} = require("../../auth/constant/utilisateur.constant");
+const mongoose = require("mongoose");
+const Utilisateurs = require("../../../models/Utilisateur");
+
+const showResponsable = (userRole) => {
+  if (userRole === UTILISATEUR_ROLES.client) {
+    return;
+  }
+  return { responsables: 1 };
+};
+
+const filterByResp = (userRole, userId) => {
+  if (userRole === UTILISATEUR_ROLES.mecanicien) {
+    return {
+      "taches.responsables": new mongoose.Types.ObjectId(String(userId)),
+    };
+  }
+  return {};
+};
 
 const findAllInterventions = async (
   userRole,
   filter = {},
   page = 1,
-  limit = PAGINATION_ROW
+  limit = PAGINATION_ROW,
+  userRequestRole,
+  userRequestId
 ) => {
   const interventions = await Intervention.aggregate([
     {
@@ -18,6 +41,17 @@ const findAllInterventions = async (
         foreignField: "_id",
         as: "vehicule.marque",
       },
+    },
+    {
+      $lookup: {
+        from: "taches",
+        localField: "_id",
+        foreignField: "intervention",
+        as: "taches",
+      },
+    },
+    {
+      $match: filterByResp(userRequestRole, userRequestId),
     },
     {
       $sort: { date: -1 },
@@ -40,9 +74,24 @@ const findAllInterventions = async (
           immatriculation: 1,
         },
         client: 1,
+        taches: {
+          _id: 1,
+          status: 1,
+          nom: 1,
+          ...showResponsable(userRequestRole),
+        },
       },
     },
   ]);
+
+  for (let intervention of interventions) {
+    for (let tache of intervention.taches) {
+      const resp = await Utilisateurs.find({
+        _id: tache.responsables,
+      });
+      tache.responsables = resp;
+    }
+  }
 
   const totalInterventions = await Intervention.countDocuments(filter);
 

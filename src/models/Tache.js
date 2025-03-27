@@ -22,6 +22,13 @@ const tacheSchema = new mongoose.Schema({
     ref: "Intervention",
     required: true,
   },
+  responsables: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Utilisateur",
+      required: false,
+    },
+  ],
 });
 
 module.exports = mongoose.model("Tache", tacheSchema);
