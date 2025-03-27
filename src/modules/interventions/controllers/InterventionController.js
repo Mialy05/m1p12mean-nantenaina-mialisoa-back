@@ -91,6 +91,20 @@ class InterventionController {
       }
     }
   }
+
+  static async deleteTask(req, res) {
+    const { id } = req.params;
+    try {
+      await this.deleteTask(id);
+      res.json(ApiResponse.success("Tâche supprimée."));
+    } catch (error) {
+      if (error.cause == 404) {
+        res.status(422).json(ApiResponse.error("Tâche non trouvée."));
+      } else {
+        res.status(500).json(ApiResponse.error(error.message));
+      }
+    }
+  }
 }
 
 module.exports = InterventionController;

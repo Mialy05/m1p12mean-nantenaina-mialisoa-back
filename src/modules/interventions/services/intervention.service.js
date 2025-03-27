@@ -2,6 +2,8 @@ const Intervention = require("../../../models/Intervention");
 const {
   PAGINATION_ROW,
   TACHE_STATUS,
+  DELETED_INTERVENTION_STATUS,
+  CREATED_INTERVENTION_STATUS,
 } = require("../../../shared/constants/constant");
 const {
   UTILISATEUR_ROLES,
@@ -149,7 +151,10 @@ const findInterventionById = async (idIntervention, userRole) => {
   const intervention = (
     await Intervention.aggregate([
       {
-        $match: { _id: new mongoose.Types.ObjectId(idIntervention) },
+        $match: {
+          _id: new mongoose.Types.ObjectId(idIntervention),
+          status: { $ne: DELETED_INTERVENTION_STATUS },
+        },
       },
       {
         $lookup: {
@@ -228,7 +233,7 @@ const findInterventionById = async (idIntervention, userRole) => {
 
 const assignTacheToResponsable = async (idTache, idResponsables) => {
   const tacheObjectId = new mongoose.Types.ObjectId(idTache);
-  const tache = await Tache.findOne({ _id: tacheObjectId });
+  const tache = await Tache.findOne({ _id: tacheObjectId, status: 0 });
   if (tache) {
     const respObjectIds = idResponsables.map(
       (r) => new mongoose.Types.ObjectId(r)
@@ -236,6 +241,7 @@ const assignTacheToResponsable = async (idTache, idResponsables) => {
     await Tache.updateOne(
       {
         _id: tacheObjectId,
+        status: { $gte: CREATED_INTERVENTION_STATUS },
       },
       {
         $addToSet: {
@@ -250,8 +256,25 @@ const assignTacheToResponsable = async (idTache, idResponsables) => {
   }
 };
 
+const deleteTache = async (idTache) => {
+  const tacheObjectId = new mongoose.Types.ObjectId(idTache);
+  const tache = await Tache.findOne({
+    _id: tacheObjectId,
+    status: { $gte: CREATED_INTERVENTION_STATUS },
+  });
+  if (tache) {
+    await Tache.updateOne({
+      _id: tacheObjectId,
+      status: -5,
+    });
+  } else {
+    throw new Error("Tache n'existe pas", { cause: 404 });
+  }
+};
+
 module.exports = {
   findAllInterventions,
   findInterventionById,
   assignTacheToResponsable,
+  deleteTache,
 };
