@@ -29,6 +29,7 @@ app.use(
   authMiddleware,
   require("./routes/intervention.routes.js")
 );
+app.use("/utilisateurs", require("./routes/utilisateur.routes.js"));
 
 app.use("/mock/rdv", async (req, res) => {
   const rdv = await RendezVous.find().populate("devis");

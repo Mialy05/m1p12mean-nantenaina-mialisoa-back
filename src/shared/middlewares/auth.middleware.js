@@ -35,7 +35,7 @@ const authorizationMiddleware = (roles) => (req, res, next) => {
         .json(ApiResponse.error(`Action interdite pour votre profil`));
     }
   } else {
-    next(authMiddleware, authorizationMiddleware);
+    next(authMiddleware(req, res, authorizationMiddleware));
   }
 };
 

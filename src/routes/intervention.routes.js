@@ -24,7 +24,11 @@ authorizationMiddleware([UTILISATEUR_ROLES.manager]);
 router.post("/taches/:id/assign", InterventionController.assignTask);
 
 authorizationMiddleware([UTILISATEUR_ROLES.manager]);
-router.delete("/taches/:id", InterventionController.deleteTask);
+router.delete(
+  "/taches/:id",
+  authorizationMiddleware([UTILISATEUR_ROLES.manager]),
+  InterventionController.deleteTask
+);
 
 authorizationMiddleware([
   UTILISATEUR_ROLES.manager,

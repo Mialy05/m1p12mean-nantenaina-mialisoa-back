@@ -255,7 +255,10 @@ const findInterventionById = async (idIntervention, userRole) => {
 
 const assignTacheToResponsable = async (idTache, idResponsables) => {
   const tacheObjectId = new mongoose.Types.ObjectId(idTache);
-  const tache = await Tache.findOne({ _id: tacheObjectId, status: 0 });
+  const tache = await Tache.findOne({
+    _id: tacheObjectId,
+    status: TACHE_CREATED_STATUS,
+  });
   if (tache) {
     const respObjectIds = idResponsables.map(
       (r) => new mongoose.Types.ObjectId(r)
@@ -266,10 +269,8 @@ const assignTacheToResponsable = async (idTache, idResponsables) => {
         status: { $gte: CREATED_INTERVENTION_STATUS },
       },
       {
-        $addToSet: {
-          responsables: {
-            $each: respObjectIds,
-          },
+        $set: {
+          responsables: respObjectIds,
         },
       }
     );
