@@ -4,6 +4,10 @@ const {
   TACHE_STATUS,
   DELETED_INTERVENTION_STATUS,
   CREATED_INTERVENTION_STATUS,
+  CREATED_TACHE_STATUS,
+  TACHE_CREATED_STATUS,
+  TACHE_DELETED_STATUS,
+  CAUSE_ERROR,
 } = require("../../../shared/constants/constant");
 const {
   UTILISATEUR_ROLES,
@@ -131,7 +135,7 @@ const getAllowedTransition = (currentStatus) => {
 
   const transitions = {};
 
-  if (currentIndex > 0 && currentStatus >= statusKeys[0]) {
+  if (currentStatus > 0 && currentIndex > 0 && currentStatus >= statusKeys[0]) {
     transitions.previous = {
       step: TACHE_STATUS[statusKeys[currentIndex - 1]],
       value: statusKeys[currentIndex - 1],
@@ -274,15 +278,63 @@ const deleteTache = async (idTache) => {
   const tacheObjectId = new mongoose.Types.ObjectId(idTache);
   const tache = await Tache.findOne({
     _id: tacheObjectId,
-    status: { $gte: CREATED_INTERVENTION_STATUS },
+    status: { $gte: TACHE_CREATED_STATUS },
   });
   if (tache) {
-    await Tache.updateOne({
-      _id: tacheObjectId,
-      status: -5,
-    });
+    await Tache.updateOne(
+      {
+        _id: tacheObjectId,
+      },
+      { $set: { status: TACHE_DELETED_STATUS } }
+    );
   } else {
     throw new Error("Tache n'existe pas", { cause: 404 });
+  }
+};
+
+const isTransitionAllowed = (currentStatus, targetStatus) => {
+  const allowedTransitions = getAllowedTransition(currentStatus);
+  return (
+    allowedTransitions.previous?.value == targetStatus ||
+    allowedTransitions.next?.value == targetStatus
+  );
+};
+
+const updateTacheStatus = async (idTache, targetStatus) => {
+  const tacheObjectId = new mongoose.Types.ObjectId(idTache);
+  const statusKeys = Object.keys(TACHE_STATUS).map(Number);
+
+  const currentIndex = statusKeys.indexOf(targetStatus);
+  if (currentIndex === -1) {
+    throw new Error("Statut cible invalide", {
+      cause: CAUSE_ERROR.validationError,
+    });
+  }
+
+  const tache = await Tache.findOne({
+    _id: tacheObjectId,
+    status: { $gte: TACHE_CREATED_STATUS },
+  });
+  if (tache) {
+    if (targetStatus == TACHE_DELETED_STATUS) {
+      await deleteTache(idTache);
+    } else {
+      if (isTransitionAllowed(tache.status, targetStatus)) {
+        await Tache.updateOne(
+          {
+            _id: tacheObjectId,
+          },
+          { $set: { status: targetStatus } }
+        );
+      } else {
+        throw new Error(
+          "Cette transition d'état n'est pas permise pour cette tâche",
+          { cause: CAUSE_ERROR.forbidden }
+        );
+      }
+    }
+  } else {
+    throw new Error("Tache n'existe pas", { cause: CAUSE_ERROR.notFound });
   }
 };
 
@@ -291,4 +343,5 @@ module.exports = {
   findInterventionById,
   assignTacheToResponsable,
   deleteTache,
+  updateTacheStatus,
 };

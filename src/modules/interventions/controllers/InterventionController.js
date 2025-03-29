@@ -1,9 +1,16 @@
-const { PAGINATION_ROW } = require("../../../shared/constants/constant");
+const {
+  PAGINATION_ROW,
+  TACHE_DELETED_STATUS,
+  CAUSE_ERROR,
+  TACHE_STATUS,
+} = require("../../../shared/constants/constant");
 const ApiResponse = require("../../../shared/types/ApiResponse");
 const {
   findAllInterventions,
   findInterventionById,
   assignTacheToResponsable,
+  deleteTache,
+  updateTacheStatus,
 } = require("../services/intervention.service");
 
 class InterventionController {
@@ -95,12 +102,47 @@ class InterventionController {
   static async deleteTask(req, res) {
     const { id } = req.params;
     try {
-      await this.deleteTask(id);
+      await updateTacheStatus(id, TACHE_DELETED_STATUS);
       res.json(ApiResponse.success("Tâche supprimée."));
     } catch (error) {
-      if (error.cause == 404) {
+      if (error.cause == CAUSE_ERROR.notFound) {
         res.status(422).json(ApiResponse.error("Tâche non trouvée."));
+      } else if (error.cause == CAUSE_ERROR.validationError) {
+        res
+          .status(422)
+          .json(ApiResponse.error(error.message || "Donnée invalide"));
+      } else if (error.cause == CAUSE_ERROR.forbidden) {
+        res
+          .status(403)
+          .json(ApiResponse.error(error.message || "Action interdite"));
       } else {
+        res.status(500).json(ApiResponse.error(error.message));
+      }
+    }
+  }
+
+  static async updateStatus(req, res) {
+    const { id } = req.params;
+    const { status } = req.body;
+    try {
+      await updateTacheStatus(id, status);
+      res.json(
+        ApiResponse.success(`Tâche déplacée vers ${TACHE_STATUS[status]}`)
+      );
+    } catch (error) {
+      if (error.cause == CAUSE_ERROR.notFound) {
+        res.status(422).json(ApiResponse.error("Tâche non trouvée."));
+      } else if (error.cause == CAUSE_ERROR.validationError) {
+        res
+          .status(422)
+          .json(ApiResponse.error(error.message || "Donnée invalide"));
+      } else if (error.cause == CAUSE_ERROR.forbidden) {
+        res
+          .status(403)
+          .json(ApiResponse.error(error.message || "Action interdite"));
+      } else {
+        console.log(error);
+
         res.status(500).json(ApiResponse.error(error.message));
       }
     }
