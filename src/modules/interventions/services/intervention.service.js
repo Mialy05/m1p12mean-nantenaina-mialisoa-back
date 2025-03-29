@@ -244,6 +244,10 @@ const findInterventionById = async (idIntervention, userRole) => {
     }
 
     intervention.taches = Object.values(groupedByStatus);
+  } else {
+    throw new Error("Intervention non trouvée", {
+      cause: CAUSE_ERROR.notFound,
+    });
   }
 
   return intervention;
@@ -338,10 +342,56 @@ const updateTacheStatus = async (idTache, targetStatus) => {
   }
 };
 
+const findTachesByIdIntervention = async (idIntervention) => {
+  const objectId = new mongoose.Types.ObjectId(idIntervention);
+
+  let taches = await Tache.aggregate([
+    {
+      $match: {
+        intervention: objectId,
+        status: { $gte: TACHE_CREATED_STATUS },
+      },
+    },
+  ]);
+  const groupedByStatus = Object.keys(TACHE_STATUS)
+    .filter((k) => k >= 0)
+    .reduce((acc, status) => {
+      acc[TACHE_STATUS[status]] = {
+        value: status,
+        label: TACHE_STATUS[status],
+        taches: [],
+      };
+      return acc;
+    }, {});
+
+  for (let tache of taches) {
+    const resp = await Utilisateurs.find(
+      {
+        _id: tache.responsables,
+      },
+      {
+        _id: 1,
+        nom: 1,
+        prenom: 1,
+        email: 1,
+        telephone: 1,
+      }
+    );
+    tache.responsables = resp;
+    if (groupedByStatus[TACHE_STATUS[tache.status]] !== undefined) {
+      groupedByStatus[TACHE_STATUS[tache.status]].taches.push(tache);
+    }
+    tache.actionPermis = getAllowedTransition(tache.status);
+  }
+
+  taches = Object.values(groupedByStatus);
+  return taches;
+};
 module.exports = {
   findAllInterventions,
   findInterventionById,
   assignTacheToResponsable,
   deleteTache,
   updateTacheStatus,
+  findTachesByIdIntervention,
 };

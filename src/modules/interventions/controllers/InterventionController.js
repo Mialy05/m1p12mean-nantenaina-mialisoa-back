@@ -11,6 +11,7 @@ const {
   assignTacheToResponsable,
   deleteTache,
   updateTacheStatus,
+  findTachesByIdIntervention,
 } = require("../services/intervention.service");
 
 class InterventionController {
@@ -89,7 +90,7 @@ class InterventionController {
     const { responsables } = req.body;
     try {
       await assignTacheToResponsable(id, responsables);
-      res.json(ApiResponse.success("Tâche assignée."));
+      res.json(ApiResponse.success({}, "Tâche assignée."));
     } catch (error) {
       if (error.cause == 404) {
         res.status(422).json(ApiResponse.error("Tâche non trouvée."));
@@ -103,7 +104,7 @@ class InterventionController {
     const { id } = req.params;
     try {
       await updateTacheStatus(id, TACHE_DELETED_STATUS);
-      res.json(ApiResponse.success("Tâche supprimée."));
+      res.json(ApiResponse.success({}, "Tâche supprimée."));
     } catch (error) {
       if (error.cause == CAUSE_ERROR.notFound) {
         res.status(422).json(ApiResponse.error("Tâche non trouvée."));
@@ -127,7 +128,7 @@ class InterventionController {
     try {
       await updateTacheStatus(id, status);
       res.json(
-        ApiResponse.success(`Tâche déplacée vers ${TACHE_STATUS[status]}`)
+        ApiResponse.success({}, `Tâche déplacée vers ${TACHE_STATUS[status]}`)
       );
     } catch (error) {
       if (error.cause == CAUSE_ERROR.notFound) {
@@ -143,6 +144,20 @@ class InterventionController {
       } else {
         console.log(error);
 
+        res.status(500).json(ApiResponse.error(error.message));
+      }
+    }
+  }
+
+  static async findAllTaches(req, res) {
+    const { id } = req.params;
+    try {
+      const taches = await findTachesByIdIntervention(id);
+      res.json(ApiResponse.success(taches));
+    } catch (error) {
+      if (error.cause == 404) {
+        res.status(422).json(ApiResponse.error("Intervention non trouvée."));
+      } else {
         res.status(500).json(ApiResponse.error(error.message));
       }
     }

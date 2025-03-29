@@ -18,6 +18,8 @@ router.get(
   InterventionController.findById
 );
 
+router.get("/:id/taches", InterventionController.findAllTaches);
+
 authorizationMiddleware([UTILISATEUR_ROLES.manager]);
 router.post("/taches/:id/assign", InterventionController.assignTask);
 
