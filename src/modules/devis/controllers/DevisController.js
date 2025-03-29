@@ -29,7 +29,7 @@ class DevisController {
     await session.startTransaction();
 
     try {
-      const utilisateur = await findUtilisateurById(req.userId);
+      const utilisateur = await findUtilisateurById(req.query.userId);
       if (!utilisateur) {
         await session.abortTransaction();
         res
@@ -89,10 +89,10 @@ class DevisController {
     if (status && !isNaN(parseInt(status))) {
       filter.status = parseInt(status);
     }
-    if (req.userRole === UTILISATEUR_ROLES.client) {
-      filter["utilisateur._id"] = new mongoose.Types.ObjectId(req.userId);
-    } else if (req.userRole === UTILISATEUR_ROLES.manager && userId) {
-      filter["utilisateur._id"] = new mongoose.Types.ObjectId(req.userId);
+    if (req.query.userRole === UTILISATEUR_ROLES.client) {
+      filter["utilisateur._id"] = new mongoose.Types.ObjectId(req.query.userId);
+    } else if (req.query.userRole === UTILISATEUR_ROLES.manager && userId) {
+      filter["utilisateur._id"] = new mongoose.Types.ObjectId(req.query.userId);
     }
 
     const nomParts = nom.split(/\s+/).filter((part) => part.trim() !== "");
@@ -125,7 +125,7 @@ class DevisController {
           },
         ],
       },
-      req.userRole
+      req.query.userRole
     );
 
     res.json({
@@ -191,10 +191,10 @@ class DevisController {
     if (status && !isNaN(parseInt(status))) {
       filter.status = parseInt(status);
     }
-    if (req.userRole === UTILISATEUR_ROLES.client) {
-      filter["client._id"] = new mongoose.Types.ObjectId(req.userId);
-    } else if (req.userRole === UTILISATEUR_ROLES.manager && userId) {
-      filter["client._id"] = new mongoose.Types.ObjectId(req.userId);
+    if (req.query.userRole === UTILISATEUR_ROLES.client) {
+      filter["client._id"] = new mongoose.Types.ObjectId(req.query.userId);
+    } else if (req.query.userRole === UTILISATEUR_ROLES.manager && userId) {
+      filter["client._id"] = new mongoose.Types.ObjectId(req.query.userId);
     }
 
     const nomParts = nom.split(/\s+/).filter((part) => part.trim() !== "");
@@ -228,7 +228,7 @@ class DevisController {
             },
           ],
         },
-        req.userRole
+        req.query.userRole
       );
       res.json(ApiResponse.success({ ...devis, stats: statsDevis }));
     } catch (error) {
