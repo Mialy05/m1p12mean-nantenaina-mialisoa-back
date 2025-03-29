@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const ApiResponse = require("../types/ApiResponse");
 
 const authMiddleware = (req, res, next) => {
   try {
@@ -24,4 +25,18 @@ const authMiddleware = (req, res, next) => {
   }
 };
 
-module.exports = authMiddleware;
+const authorizationMiddleware = (roles) => (req, res, next) => {
+  if (req.query.userRole) {
+    if (roles.includes("*") || roles.includes(req.query.userRole)) {
+      next();
+    } else {
+      return res
+        .status(403)
+        .json(ApiResponse.error(`Action interdite pour votre profil`));
+    }
+  } else {
+    next(authMiddleware, authorizationMiddleware);
+  }
+};
+
+module.exports = { authMiddleware, authorizationMiddleware };

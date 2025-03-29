@@ -1,17 +1,33 @@
+const {
+  UTILISATEUR_ROLES,
+} = require("../modules/auth/constant/utilisateur.constant");
 const InterventionController = require("../modules/interventions/controllers/InterventionController");
+const {
+  authorizationMiddleware,
+} = require("../shared/middlewares/auth.middleware");
 
 const router = require("express").Router();
-// TODO: manager sy meca ihany
-router.get("/", InterventionController.findAll);
-// TODO: manager sy meca ihany
-router.get("/:id", InterventionController.findById);
 
-// TODO: manager ihany
+router.get("/", authorizationMiddleware(["*"]), InterventionController.findAll);
+router.get(
+  "/:id",
+  authorizationMiddleware([
+    UTILISATEUR_ROLES.manager,
+    UTILISATEUR_ROLES.mecanicien,
+  ]),
+  InterventionController.findById
+);
+
+authorizationMiddleware([UTILISATEUR_ROLES.manager]);
 router.post("/taches/:id/assign", InterventionController.assignTask);
-// TODO: manager ihany
+
+authorizationMiddleware([UTILISATEUR_ROLES.manager]);
 router.delete("/taches/:id", InterventionController.deleteTask);
 
-// TODO: manager sy meca ihany
+authorizationMiddleware([
+  UTILISATEUR_ROLES.manager,
+  UTILISATEUR_ROLES.mecanicien,
+]);
 router.patch("/taches/:id", InterventionController.updateStatus);
 
 module.exports = router;

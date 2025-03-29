@@ -1,10 +1,10 @@
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
-const authMiddleware = require("./shared/middlewares/auth.middleware.js");
 const loggerMiddleware = require("./shared/middlewares/logger.middleware.js");
 const RendezVous = require("./models/RendezVous.js");
 const DevisController = require("./modules/devis/controllers/DevisController.js");
+const { authMiddleware } = require("./shared/middlewares/auth.middleware.js");
 
 require("dotenv").configDotenv();
 const PORT = process.env.PORT || 5555;
