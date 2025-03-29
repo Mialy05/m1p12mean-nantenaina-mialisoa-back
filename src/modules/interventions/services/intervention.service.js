@@ -130,17 +130,18 @@ const getAllowedTransition = (currentStatus) => {
   }
 
   const transitions = {};
+
+  if (currentIndex > 0 && currentStatus >= statusKeys[0]) {
+    transitions.previous = {
+      step: TACHE_STATUS[statusKeys[currentIndex - 1]],
+      value: statusKeys[currentIndex - 1],
+    };
+  }
+
   if (currentIndex < statusKeys.length - 1) {
     transitions.next = {
       step: TACHE_STATUS[statusKeys[currentIndex + 1]],
       value: statusKeys[currentIndex + 1],
-    };
-  }
-
-  if (currentIndex > 0 && currentStatus >= TACHE_STATUS[0]) {
-    transitions.previous = {
-      step: TACHE_STATUS[statusKeys[currentIndex - 1]],
-      value: statusKeys[currentIndex - 1],
     };
   }
 
@@ -166,6 +167,14 @@ const findInterventionById = async (idIntervention, userRole) => {
       },
       {
         $lookup: {
+          from: "motorisations",
+          localField: "vehicule.motorisation",
+          foreignField: "_id",
+          as: "vehicule.motorisation",
+        },
+      },
+      {
+        $lookup: {
           from: "taches",
           localField: "_id",
           foreignField: "intervention",
@@ -182,12 +191,16 @@ const findInterventionById = async (idIntervention, userRole) => {
             },
             modele: 1,
             immatriculation: 1,
+            motorisation: {
+              $arrayElemAt: ["$vehicule.motorisation", 0],
+            },
           },
           client: userRole == UTILISATEUR_ROLES.manager ? 1 : undefined,
           taches: {
             _id: 1,
             status: 1,
             nom: 1,
+            estimation: 1,
             responsables: 1,
           },
         },
@@ -200,6 +213,7 @@ const findInterventionById = async (idIntervention, userRole) => {
       .reduce((acc, status) => {
         acc[TACHE_STATUS[status]] = {
           value: status,
+          label: TACHE_STATUS[status],
           taches: [],
         };
         return acc;
@@ -225,7 +239,7 @@ const findInterventionById = async (idIntervention, userRole) => {
       tache.actionPermis = getAllowedTransition(tache.status);
     }
 
-    intervention.taches = groupedByStatus;
+    intervention.taches = Object.values(groupedByStatus);
   }
 
   return intervention;
