@@ -1,3 +1,4 @@
+const { default: mongoose } = require("mongoose");
 const {
   PAGINATION_ROW,
   TACHE_DELETED_STATUS,
@@ -5,6 +6,9 @@ const {
   TACHE_STATUS,
 } = require("../../../shared/constants/constant");
 const ApiResponse = require("../../../shared/types/ApiResponse");
+const {
+  UTILISATEUR_ROLES,
+} = require("../../auth/constant/utilisateur.constant");
 const {
   findAllInterventions,
   findInterventionById,
@@ -19,6 +23,7 @@ const {
 class InterventionController {
   static async findAll(req, res) {
     const {
+      userId,
       page = 1,
       limit = PAGINATION_ROW,
       userRole,
@@ -33,11 +38,9 @@ class InterventionController {
       },
     };
 
-    // if (req.query.userRole === UTILISATEUR_ROLES.client) {
-    //   filter["utilisateur.id"] = req.query.userId;
-    // } else if (req.query.userRole === UTILISATEUR_ROLES.manager && userId) {
-    //   filter["utilisateur.id"] = userId;
-    // }
+    if (req.query.userRole === UTILISATEUR_ROLES.client) {
+      filter["client.id"] = new mongoose.Types.ObjectId(userId);
+    }
 
     const nomParts = nom.split(/\s+/).filter((part) => part.trim() !== "");
     const searchRegex = nomParts.map((part) => `(?=.*${part})`).join("");
@@ -56,12 +59,11 @@ class InterventionController {
 
     try {
       const interventions = await findAllInterventions(
+        userId,
         userRole,
         finalFilter,
         parseInt(page) || 1,
-        parseInt(limit) || PAGINATION_ROW,
-        req.query.userRole,
-        req.query.userId
+        parseInt(limit) || PAGINATION_ROW
       );
       res.json(ApiResponse.success(interventions));
     } catch (error) {

@@ -17,13 +17,11 @@ const DEVIS_DELETED = -5;
 
 const DEVIS_STATUS = {
   client: {
-    "-5": "Supprimé",
     0: "Créé",
     5: "Attente RDV",
     10: "Abouti en RDV",
   },
   manager: {
-    "-5": "Supprimé",
     0: "Créé",
     5: "RDV à confirmer",
     10: "Abouti en RDV",
