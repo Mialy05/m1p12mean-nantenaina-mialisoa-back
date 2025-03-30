@@ -65,13 +65,15 @@ const getStatDemandeDevisByStatus = async (
     {
       $group: {
         _id: {
-          client: "$utilisateur.id",
+          // client: "$utilisateur.id",
           status: "$status",
         },
         count: { $sum: 1 },
       },
     },
   ]);
+
+  console.log(data);
 
   const DEMANDE_STATUS = getStatusDemandeDevisValues(role);
   const allStatus = Object.keys(DEMANDE_STATUS);
@@ -106,7 +108,7 @@ const getDevis = async (filter = {}, page = 1, limit = PAGINATION_ROW) => {
       $skip: (page - 1) * limit,
     },
     {
-      $limit: limit,
+      $limit: Number(limit),
     },
     {
       $addFields: {
@@ -153,7 +155,6 @@ const getDevis = async (filter = {}, page = 1, limit = PAGINATION_ROW) => {
   };
 };
 
-// TODO: verify stats pour manager
 const getStatDevisByStatus = async (
   filter = {},
   role = UTILISATEUR_ROLES.client
@@ -163,7 +164,6 @@ const getStatDevisByStatus = async (
     {
       $group: {
         _id: {
-          client: "$client._id",
           status: "$status",
         },
         count: { $sum: 1 },

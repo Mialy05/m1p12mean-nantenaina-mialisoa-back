@@ -73,7 +73,7 @@ class DevisController {
   static async findAllDemandeDevis(req, res) {
     const {
       status,
-      userId,
+      clientId,
       immatriculation = "",
       nom = "",
       page = 1,
@@ -91,8 +91,8 @@ class DevisController {
     }
     if (req.query.userRole === UTILISATEUR_ROLES.client) {
       filter["utilisateur._id"] = new mongoose.Types.ObjectId(req.query.userId);
-    } else if (req.query.userRole === UTILISATEUR_ROLES.manager && userId) {
-      filter["utilisateur._id"] = new mongoose.Types.ObjectId(req.query.userId);
+    } else if (req.query.userRole === UTILISATEUR_ROLES.manager && clientId) {
+      filter["utilisateur._id"] = new mongoose.Types.ObjectId(clientId);
     }
 
     const nomParts = nom.split(/\s+/).filter((part) => part.trim() !== "");
@@ -175,7 +175,7 @@ class DevisController {
   static async findAllDevis(req, res) {
     const {
       status,
-      userId,
+      clientId,
       immatriculation = "",
       nom = "",
       page = 1,
@@ -193,8 +193,8 @@ class DevisController {
     }
     if (req.query.userRole === UTILISATEUR_ROLES.client) {
       filter["client._id"] = new mongoose.Types.ObjectId(req.query.userId);
-    } else if (req.query.userRole === UTILISATEUR_ROLES.manager && userId) {
-      filter["client._id"] = new mongoose.Types.ObjectId(req.query.userId);
+    } else if (req.query.userRole === UTILISATEUR_ROLES.manager && clientId) {
+      filter["client._id"] = new mongoose.Types.ObjectId(clientId);
     }
 
     const nomParts = nom.split(/\s+/).filter((part) => part.trim() !== "");
@@ -239,7 +239,7 @@ class DevisController {
 
   static async findDevisById(req, res) {
     const { id } = req.params;
-    const { userRole, userId } = req;
+    const { userRole, userId } = req.query;
     try {
       const devis = await getDevisById(id);
       if (devis) {
@@ -263,12 +263,9 @@ class DevisController {
 
   static async generatePDF(req, res) {
     const { id } = req.params;
-    const { userId, userRole } = req;
+    const { userId, userRole } = req.query;
     try {
       const devis = await getDevisById(id);
-
-      // TODO: refactor ?
-      console.log("devis", devis.client._id, userId);
 
       if (userRole === UTILISATEUR_ROLES.client && devis.client._id != userId) {
         return res.status(403).json(ApiResponse.error("Ressource interdite."));
