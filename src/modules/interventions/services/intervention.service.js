@@ -15,6 +15,7 @@ const {
 const mongoose = require("mongoose");
 const Utilisateurs = require("../../../models/Utilisateur");
 const Tache = require("../../../models/Tache");
+const Service = require("../../../models/Service");
 
 const showResponsable = (userRole) => {
   if (userRole === UTILISATEUR_ROLES.client) {
@@ -396,3 +397,21 @@ module.exports = {
   updateTacheStatus,
   findTachesByIdIntervention,
 };
+const addTaskToIntervention = async (data) => {
+  const service = await Service.findById(data.service);
+
+  if (!service) {
+    throw new Error("Le service n'existe pas");
+  }
+
+  const tache = new Tache();
+  tache.nom = service.nom;
+  tache.estimation = data.heure;
+  tache.intervention = new mongoose.Types.ObjectId(data.idIntervention);
+  tache.responsables = data.responsables;
+
+  await tache.save();
+  return tache;
+};
+
+module.exports = { findAllInterventions, addTaskToIntervention };

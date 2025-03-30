@@ -8,6 +8,7 @@ const {
 
 const router = require("express").Router();
 
+// TODO: manager sy meca ihany
 router.get("/", authorizationMiddleware(["*"]), InterventionController.findAll);
 router.get(
   "/:id",
@@ -29,11 +30,11 @@ router.delete(
   authorizationMiddleware([UTILISATEUR_ROLES.manager]),
   InterventionController.deleteTask
 );
-
+router.patch("/taches/:id", InterventionController.updateStatus);
 authorizationMiddleware([
   UTILISATEUR_ROLES.manager,
   UTILISATEUR_ROLES.mecanicien,
 ]);
-router.patch("/taches/:id", InterventionController.updateStatus);
 
+router.post("/:id/taches", InterventionController.addTache);
 module.exports = router;

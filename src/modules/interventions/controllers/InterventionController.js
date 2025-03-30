@@ -12,6 +12,7 @@ const {
   deleteTache,
   updateTacheStatus,
   findTachesByIdIntervention,
+  addTaskToIntervention,
 } = require("../services/intervention.service");
 
 class InterventionController {
@@ -160,6 +161,25 @@ class InterventionController {
       } else {
         res.status(500).json(ApiResponse.error(error.message));
       }
+    }
+  }
+  static async addTache(req, res) {
+    try {
+      const { id: idIntervention } = req.params;
+      const { heure, responsables, service } = req.body;
+      console.log(idIntervention, heure, responsables, service);
+
+      const intervention = await addTaskToIntervention({
+        idIntervention,
+        heure,
+        responsables,
+        service,
+      });
+
+      res.json(ApiResponse.success(intervention));
+    } catch (error) {
+      console.log(error);
+      res.status(500).json(ApiResponse.error(error.message));
     }
   }
 }
