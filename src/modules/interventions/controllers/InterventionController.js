@@ -12,6 +12,8 @@ const {
   deleteTache,
   updateTacheStatus,
   findTachesByIdIntervention,
+  findAllCommentsByIdTache,
+  addCommentToTache,
 } = require("../services/intervention.service");
 
 class InterventionController {
@@ -155,8 +157,43 @@ class InterventionController {
       const taches = await findTachesByIdIntervention(id);
       res.json(ApiResponse.success(taches));
     } catch (error) {
-      if (error.cause == 404) {
+      if (error.cause == CAUSE_ERROR.notFound) {
         res.status(422).json(ApiResponse.error("Intervention non trouvée."));
+      } else {
+        res.status(500).json(ApiResponse.error(error.message));
+      }
+    }
+  }
+
+  static async findCommentsOfTache(req, res) {
+    const { id } = req.params;
+    try {
+      const taches = await findAllCommentsByIdTache(id);
+      res.json(ApiResponse.success(taches));
+    } catch (error) {
+      if (error.cause == CAUSE_ERROR.notFound) {
+        res.status(422).json(ApiResponse.error("Tâche non trouvée."));
+      } else {
+        res.status(500).json(ApiResponse.error(error.message));
+      }
+    }
+  }
+
+  static async commentTask(req, res) {
+    const { id } = req.params;
+    const { contenu } = req.body;
+    const userId = req.query.userId;
+    try {
+      await addCommentToTache(id, { contenu: contenu }, userId);
+      res.json(ApiResponse.success({}, `Commentaire ajouté`));
+    } catch (error) {
+      // TODO: atao anaty middleware de réponse
+      if (error.cause == CAUSE_ERROR.notFound) {
+        res.status(422).json(ApiResponse.error("Tâche non trouvée."));
+      } else if (error.cause == CAUSE_ERROR.forbidden) {
+        res
+          .status(403)
+          .json(ApiResponse.error(error.message || "Action interdite"));
       } else {
         res.status(500).json(ApiResponse.error(error.message));
       }
