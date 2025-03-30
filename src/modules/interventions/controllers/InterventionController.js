@@ -13,6 +13,7 @@ const {
   updateTacheStatus,
   findTachesByIdIntervention,
   addTaskToIntervention,
+  findServicesInIntervention,
 } = require("../services/intervention.service");
 
 class InterventionController {
@@ -180,6 +181,23 @@ class InterventionController {
     } catch (error) {
       console.log(error);
       res.status(500).json(ApiResponse.error(error.message));
+    }
+  }
+
+  static async getServicesInIntervention(req, res) {
+    const { id } = req.params;
+    try {
+      const services = await findServicesInIntervention(id);
+      const intervention = await findInterventionById(id, req.query.userRole);
+      intervention.taches = [];
+      intervention.services = services;
+      res.json(ApiResponse.success(intervention));
+    } catch (error) {
+      if (error.cause == 404) {
+        res.status(422).json(ApiResponse.error("Intervention non trouvée."));
+      } else {
+        res.status(500).json(ApiResponse.error(error.message));
+      }
     }
   }
 }

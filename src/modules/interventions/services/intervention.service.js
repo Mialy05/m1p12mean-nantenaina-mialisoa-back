@@ -154,6 +154,8 @@ const getAllowedTransition = (currentStatus) => {
 };
 
 const findInterventionById = async (idIntervention, userRole) => {
+  console.log(userRole);
+
   const intervention = (
     await Intervention.aggregate([
       {
@@ -389,14 +391,7 @@ const findTachesByIdIntervention = async (idIntervention) => {
   taches = Object.values(groupedByStatus);
   return taches;
 };
-module.exports = {
-  findAllInterventions,
-  findInterventionById,
-  assignTacheToResponsable,
-  deleteTache,
-  updateTacheStatus,
-  findTachesByIdIntervention,
-};
+
 const addTaskToIntervention = async (data) => {
   const service = await Service.findById(data.service);
 
@@ -414,4 +409,46 @@ const addTaskToIntervention = async (data) => {
   return tache;
 };
 
-module.exports = { findAllInterventions, addTaskToIntervention };
+const findServicesInIntervention = async (idIntervention) => {
+  const objectId = new mongoose.Types.ObjectId(idIntervention);
+
+  let taches = await Tache.aggregate([
+    {
+      $match: {
+        intervention: objectId,
+      },
+    },
+    {
+      $lookup: {
+        from: "services",
+        localField: "nom",
+        foreignField: "nom",
+        as: "service",
+      },
+    },
+    {
+      $project: {
+        _id: 1,
+        estimation: 1,
+        service: { $arrayElemAt: ["$service", 0] },
+      },
+    },
+  ]);
+  console.log(taches);
+
+  return taches.map((tache) => ({
+    ...tache.service,
+    estimation: tache.estimation,
+  }));
+};
+
+module.exports = {
+  findAllInterventions,
+  findInterventionById,
+  assignTacheToResponsable,
+  deleteTache,
+  updateTacheStatus,
+  findTachesByIdIntervention,
+  addTaskToIntervention,
+  findServicesInIntervention,
+};

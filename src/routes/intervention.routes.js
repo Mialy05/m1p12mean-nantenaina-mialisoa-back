@@ -37,4 +37,12 @@ authorizationMiddleware([
 ]);
 
 router.post("/:id/taches", InterventionController.addTache);
+router.get(
+  "/:id/services",
+  authorizationMiddleware([
+    UTILISATEUR_ROLES.manager,
+    UTILISATEUR_ROLES.mecanicien,
+  ]),
+  InterventionController.getServicesInIntervention
+);
 module.exports = router;
