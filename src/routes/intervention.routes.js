@@ -20,20 +20,28 @@ router.get(
 
 router.get("/:id/taches", InterventionController.findAllTaches);
 
-authorizationMiddleware([UTILISATEUR_ROLES.manager]);
-router.post("/taches/:id/assign", InterventionController.assignTask);
+router.post(
+  "/taches/:id/assign",
+  authorizationMiddleware([UTILISATEUR_ROLES.manager]),
+  InterventionController.assignTask
+);
 
-authorizationMiddleware([UTILISATEUR_ROLES.manager]);
 router.delete(
   "/taches/:id",
   authorizationMiddleware([UTILISATEUR_ROLES.manager]),
   InterventionController.deleteTask
 );
 
-authorizationMiddleware([
-  UTILISATEUR_ROLES.manager,
-  UTILISATEUR_ROLES.mecanicien,
-]);
-router.patch("/taches/:id", InterventionController.updateStatus);
+router.patch(
+  "/taches/:id",
+  authorizationMiddleware([
+    UTILISATEUR_ROLES.manager,
+    UTILISATEUR_ROLES.mecanicien,
+  ]),
+  InterventionController.updateStatus
+);
+
+router.get("/taches/:id/comments", InterventionController.findCommentsOfTache);
+router.post("/taches/:id/comments", InterventionController.commentTask);
 
 module.exports = router;
