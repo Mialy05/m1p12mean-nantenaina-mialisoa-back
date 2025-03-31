@@ -98,9 +98,14 @@ class RdvController {
     } catch (error) {
       console.error(error);
       await session.abortTransaction();
-      res.json(
-        ApiResponse.error("Erreur lors de l'acceptation du rendez-vous", error)
-      );
+      res
+        .status(500)
+        .json(
+          ApiResponse.error(
+            "Erreur lors de l'acceptation du rendez-vous",
+            error
+          )
+        );
     } finally {
       await session.endSession();
     }

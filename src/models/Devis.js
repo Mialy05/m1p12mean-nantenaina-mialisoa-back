@@ -23,7 +23,6 @@ const devisSchema = new mongoose.Schema({
     _id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Utilisateur",
-      required: true,
     },
     nom: {
       type: String,
@@ -62,7 +61,6 @@ const devisSchema = new mongoose.Schema({
     _id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Vehicule",
-      required: true,
     },
     marque: {
       type: mongoose.Schema.Types.ObjectId,
