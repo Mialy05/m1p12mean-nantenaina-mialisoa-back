@@ -14,4 +14,8 @@ const formatNumber = (number) => {
   }
 };
 
-module.exports = { formatNumber };
+const roundNumberTo2 = (nombre) => {
+  return Math.round(nombre * 100) / 100;
+};
+
+module.exports = { formatNumber, roundNumberTo2 };

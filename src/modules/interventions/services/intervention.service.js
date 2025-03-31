@@ -8,6 +8,8 @@ const {
   TACHE_CREATED_STATUS,
   TACHE_DELETED_STATUS,
   CAUSE_ERROR,
+  TACHE_DONE_STATUS,
+  TACHE_DOING_STATUS,
 } = require("../../../shared/constants/constant");
 const {
   UTILISATEUR_ROLES,
@@ -16,6 +18,9 @@ const mongoose = require("mongoose");
 const Utilisateurs = require("../../../models/Utilisateur");
 const Tache = require("../../../models/Tache");
 const Service = require("../../../models/Service");
+const { findUtilisateurById } = require("../../auth/services/auth.service");
+const dayjs = require("dayjs");
+const { roundNumberTo2 } = require("../../../shared/helpers/number");
 
 const showResponsable = (userRole) => {
   if (userRole === UTILISATEUR_ROLES.client) {
@@ -33,6 +38,7 @@ const filterByResp = (userRole, userId) => {
   return {};
 };
 
+// TODO: rehefa méca no mitady intervention d'une véhicule dia lasa tsy hitany raha ohatra ka tsy nanao intervention tao izy
 const findAllInterventions = async (
   userRole,
   filter = {},
@@ -43,7 +49,7 @@ const findAllInterventions = async (
 ) => {
   const interventions = await Intervention.aggregate([
     {
-      $match: filter,
+      $match: { ...filter, status: { $ne: DELETED_INTERVENTION_STATUS } },
     },
     {
       $lookup: {
@@ -62,7 +68,20 @@ const findAllInterventions = async (
       },
     },
     {
-      $match: filterByResp(userRequestRole, userRequestId),
+      $match: {
+        ...filterByResp(userRequestRole, userRequestId),
+      },
+    },
+    {
+      $addFields: {
+        taches: {
+          $filter: {
+            input: "$taches",
+            as: "tache",
+            cond: { $gte: ["$$tache.status", TACHE_CREATED_STATUS] },
+          },
+        },
+      },
     },
     {
       $sort: { date: -1 },
@@ -96,6 +115,8 @@ const findAllInterventions = async (
   ]);
 
   for (let intervention of interventions) {
+    // progression
+    let progression = 0;
     for (let tache of intervention.taches) {
       const resp = await Utilisateurs.find(
         {
@@ -109,11 +130,27 @@ const findAllInterventions = async (
           telephone: 1,
         }
       );
+      if (tache.status == TACHE_DONE_STATUS) {
+        progression += 1;
+      } else if (tache.status == TACHE_DOING_STATUS) {
+        progression += 0.5;
+      }
+      tache.status = TACHE_STATUS[tache.status];
       tache.responsables = resp;
+    }
+    if (intervention.taches.length > 0) {
+      intervention.progression = roundNumberTo2(
+        (progression / intervention.taches.length) * 100
+      );
+    } else {
+      intervention.progression = 0;
     }
   }
 
-  const totalInterventions = await Intervention.countDocuments(filter);
+  const totalInterventions = await Intervention.countDocuments({
+    ...filter,
+    status: { $ne: DELETED_INTERVENTION_STATUS },
+  });
 
   return {
     items: interventions,
@@ -349,14 +386,15 @@ const updateTacheStatus = async (idTache, targetStatus) => {
 const findTachesByIdIntervention = async (idIntervention) => {
   const objectId = new mongoose.Types.ObjectId(idIntervention);
 
-  let taches = await Tache.aggregate([
-    {
-      $match: {
-        intervention: objectId,
-        status: { $gte: TACHE_CREATED_STATUS },
-      },
-    },
-  ]);
+  let taches = await Tache.find({
+    intervention: objectId,
+    status: { $gte: TACHE_CREATED_STATUS },
+  }).populate({
+    path: "responsables",
+    model: "Utilisateur",
+    select: "_id nom prenom email telephone role",
+  });
+
   const groupedByStatus = Object.keys(TACHE_STATUS)
     .filter((k) => k >= 0)
     .reduce((acc, status) => {
@@ -369,19 +407,6 @@ const findTachesByIdIntervention = async (idIntervention) => {
     }, {});
 
   for (let tache of taches) {
-    const resp = await Utilisateurs.find(
-      {
-        _id: tache.responsables,
-      },
-      {
-        _id: 1,
-        nom: 1,
-        prenom: 1,
-        email: 1,
-        telephone: 1,
-      }
-    );
-    tache.responsables = resp;
     if (groupedByStatus[TACHE_STATUS[tache.status]] !== undefined) {
       groupedByStatus[TACHE_STATUS[tache.status]].taches.push(tache);
     }
@@ -442,6 +467,53 @@ const findServicesInIntervention = async (idIntervention) => {
   }));
 };
 
+const findAllCommentsByIdTache = async (idTache) => {
+  const tache = await Tache.findOne({
+    _id: new mongoose.Types.ObjectId(idTache),
+    status: { $gte: TACHE_CREATED_STATUS },
+  }).populate({
+    path: "commentaires",
+    options: { sort: { date: -1 } },
+    populate: {
+      path: "auteur",
+      model: "Utilisateur",
+      select: "_id nom prenom email telephone role",
+    },
+  });
+  if (tache) {
+    return tache.commentaires;
+  } else {
+    throw new Error("Tâche introuvable", { cause: CAUSE_ERROR.notFound });
+  }
+};
+
+// TODO: fuseau horaire
+const addCommentToTache = async (idTache, comment, idUser) => {
+  const tache = await Tache.findOne({
+    _id: new mongoose.Types.ObjectId(idTache),
+    status: { $gte: TACHE_CREATED_STATUS },
+  });
+  if (tache) {
+    const user = await findUtilisateurById(idUser);
+    if (!user) {
+      throw new Error("Action interdite pour l'utilisateur", {
+        cause: CAUSE_ERROR.forbidden,
+      });
+    }
+
+    const newComment = {
+      auteur: user,
+      contenu: comment.contenu,
+      date: new dayjs(),
+    };
+    tache.commentaires.push(newComment);
+    await tache.save();
+    return;
+  } else {
+    throw new Error("Tache introuvable", { cause: CAUSE_ERROR.notFound });
+  }
+};
+
 module.exports = {
   findAllInterventions,
   findInterventionById,
@@ -451,4 +523,6 @@ module.exports = {
   findTachesByIdIntervention,
   addTaskToIntervention,
   findServicesInIntervention,
+  findAllCommentsByIdTache,
+  addCommentToTache,
 };

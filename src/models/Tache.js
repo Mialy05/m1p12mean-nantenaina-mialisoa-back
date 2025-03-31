@@ -1,4 +1,22 @@
 const mongoose = require("mongoose");
+const dayjs = require("dayjs");
+
+const commentaireSchema = new mongoose.Schema({
+  auteur: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Utilisateur",
+    required: true,
+  },
+  contenu: {
+    type: String,
+    required: true,
+  },
+  date: {
+    type: Date,
+    default: dayjs(),
+  },
+});
+
 const tacheSchema = new mongoose.Schema({
   nom: {
     type: String,
@@ -29,6 +47,7 @@ const tacheSchema = new mongoose.Schema({
       required: false,
     },
   ],
+  commentaires: [commentaireSchema],
 });
 
 module.exports = mongoose.model("Tache", tacheSchema);
