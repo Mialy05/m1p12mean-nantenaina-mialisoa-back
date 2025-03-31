@@ -50,10 +50,11 @@ const findAllDemandeRdv = async (page = 1, limit = 50) => {
     count,
   };
 };
-const findAllAcceptedRdv = async (startDate, endDate) => {
+const findAllAcceptedRdv = async (startDate, endDate, userId) => {
   if (!startDate || !endDate) {
     throw new Error("startDate and endDate are required");
   }
+
   const filter = {
     $and: [
       {
@@ -70,6 +71,12 @@ const findAllAcceptedRdv = async (startDate, endDate) => {
       },
     ],
   };
+
+  if (userId) {
+    filter.$and.push({
+      "devis.client.id": userId,
+    });
+  }
 
   const rdvs = await RendezVous.aggregate([
     {

@@ -14,6 +14,9 @@ const {
 const {
   findAllDemandeDevis,
 } = require("../../devis/controllers/DevisController");
+const {
+  UTILISATEUR_ROLES,
+} = require("../../auth/constant/utilisateur.constant");
 
 class RdvController {
   static async createDemandeRdv(req, res) {
@@ -133,7 +136,11 @@ class RdvController {
         ? dayjs(req.query.endDate, "YYYY-MM-DD")
         : dayjs().endOf("year");
       console.log(startDate.toISOString(), endDate.toISOString());
-      const data = await findAllAcceptedRdv(startDate, endDate);
+      let userId = null;
+      if (req.query.userRole == UTILISATEUR_ROLES.client) {
+        userId = req.query.userId;
+      }
+      const data = await findAllAcceptedRdv(startDate, endDate, userId);
       res.json(ApiResponse.success(data, "Rendez-vous récupérés avec succès"));
     } catch (error) {
       console.error(error);
