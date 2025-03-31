@@ -35,7 +35,7 @@ const authorizationMiddleware = (roles) => (req, res, next) => {
         .json(ApiResponse.error(`Action interdite pour votre profil`));
     }
   } else {
-    next(authMiddleware(req, res, authorizationMiddleware));
+    res.status(401).send({ isError: true, message: "Connexion requise" });
   }
 };
 

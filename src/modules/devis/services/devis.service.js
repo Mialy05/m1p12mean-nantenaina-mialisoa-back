@@ -73,8 +73,6 @@ const getStatDemandeDevisByStatus = async (
     },
   ]);
 
-  console.log(data);
-
   const DEMANDE_STATUS = getStatusDemandeDevisValues(role);
   const allStatus = Object.keys(DEMANDE_STATUS);
   let total = 0;

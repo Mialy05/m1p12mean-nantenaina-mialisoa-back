@@ -4,7 +4,13 @@ const mongoose = require("mongoose");
 const loggerMiddleware = require("./shared/middlewares/logger.middleware.js");
 const RendezVous = require("./models/RendezVous.js");
 const DevisController = require("./modules/devis/controllers/DevisController.js");
-const { authMiddleware } = require("./shared/middlewares/auth.middleware.js");
+const {
+  authMiddleware,
+  authorizationMiddleware,
+} = require("./shared/middlewares/auth.middleware.js");
+const {
+  UTILISATEUR_ROLES,
+} = require("./modules/auth/constant/utilisateur.constant.js");
 
 require("dotenv").configDotenv();
 const PORT = process.env.PORT || 5555;
@@ -18,7 +24,15 @@ app.use(loggerMiddleware);
 app.use("/test", require("./routes/test"));
 app.use("/auth", require("./routes/auth.routes.js"));
 
-app.use("/devis", authMiddleware, require("./routes/devis.routes.js"));
+app.use(
+  "/devis",
+  authMiddleware,
+  authorizationMiddleware([
+    UTILISATEUR_ROLES.manager,
+    UTILISATEUR_ROLES.client,
+  ]),
+  require("./routes/devis.routes.js")
+);
 app.use("/motorisations", require("./routes/motorisation.routes.js"));
 app.use("/marques", require("./routes/marque.routes.js"));
 app.use("/vehicules", require("./routes/vehicule.routes.js"));
