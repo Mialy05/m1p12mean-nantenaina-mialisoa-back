@@ -16,6 +16,8 @@ const {
   deleteTache,
   updateTacheStatus,
   findTachesByIdIntervention,
+  addTaskToIntervention,
+  findServicesInIntervention,
   findAllCommentsByIdTache,
   addCommentToTache,
 } = require("../services/intervention.service");
@@ -160,6 +162,42 @@ class InterventionController {
       res.json(ApiResponse.success(taches));
     } catch (error) {
       if (error.cause == CAUSE_ERROR.notFound) {
+        res.status(422).json(ApiResponse.error("Intervention non trouvée."));
+      } else {
+        res.status(500).json(ApiResponse.error(error.message));
+      }
+    }
+  }
+  static async addTache(req, res) {
+    try {
+      const { id: idIntervention } = req.params;
+      const { heure, responsables, service } = req.body;
+      console.log(idIntervention, heure, responsables, service);
+
+      const intervention = await addTaskToIntervention({
+        idIntervention,
+        heure,
+        responsables,
+        service,
+      });
+
+      res.json(ApiResponse.success(intervention));
+    } catch (error) {
+      console.log(error);
+      res.status(500).json(ApiResponse.error(error.message));
+    }
+  }
+
+  static async getServicesInIntervention(req, res) {
+    const { id } = req.params;
+    try {
+      const services = await findServicesInIntervention(id);
+      const intervention = await findInterventionById(id, req.query.userRole);
+      intervention.taches = [];
+      intervention.services = services;
+      res.json(ApiResponse.success(intervention));
+    } catch (error) {
+      if (error.cause == 404) {
         res.status(422).json(ApiResponse.error("Intervention non trouvée."));
       } else {
         res.status(500).json(ApiResponse.error(error.message));

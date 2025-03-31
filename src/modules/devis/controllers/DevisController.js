@@ -141,18 +141,29 @@ class DevisController {
     const session = await mongoose.startSession();
     session.startTransaction();
     try {
-      const idDemande = req.body.idDemande;
-      const demande = await DemandeDevis.findById(idDemande);
-      if (!demande) {
-        throw new Error("Demande introuvable");
+      if (req.body.idDemande != "") {
+        const idDemande = req.body.idDemande;
+        const demande = await DemandeDevis.findById(idDemande);
+        if (!demande) {
+          throw new Error("Demande introuvable");
+        }
+        demande.status = 5;
+        await demande.save({ session });
       }
-      demande.status = 5;
-      await demande.save({ session });
 
-      const devis = new Devis(req.body);
+      const devis = new Devis();
       devis.numero = dayjs().format("YYYYMMDDHHmmss");
       devis.date = dayjs().toISOString();
       devis.status = 0;
+      devis.vehicule = req.body.vehicule;
+      if (req.body.vehicule._id == "") {
+        devis.vehicule._id = undefined;
+      }
+      devis.client = req.body.client;
+      if (req.body.client._id == "") {
+        devis.client._id = undefined;
+      }
+      devis.services = req.body.services;
       devis.vehicule.annee = dayjs(req.body.vehicule.annee).get("year");
 
       await devis.save({ session });

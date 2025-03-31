@@ -17,6 +17,7 @@ const {
 const mongoose = require("mongoose");
 const Utilisateurs = require("../../../models/Utilisateur");
 const Tache = require("../../../models/Tache");
+const Service = require("../../../models/Service");
 const { findUtilisateurById } = require("../../auth/services/auth.service");
 const dayjs = require("dayjs");
 const { roundNumberTo2 } = require("../../../shared/helpers/number");
@@ -191,6 +192,8 @@ const getAllowedTransition = (currentStatus) => {
 };
 
 const findInterventionById = async (idIntervention, userRole) => {
+  console.log(userRole);
+
   const intervention = (
     await Intervention.aggregate([
       {
@@ -415,6 +418,56 @@ const findTachesByIdIntervention = async (idIntervention) => {
   return taches;
 };
 
+const addTaskToIntervention = async (data) => {
+  const service = await Service.findById(data.service);
+
+  if (!service) {
+    throw new Error("Le service n'existe pas");
+  }
+
+  const tache = new Tache();
+  tache.nom = service.nom;
+  tache.estimation = data.heure;
+  tache.intervention = new mongoose.Types.ObjectId(data.idIntervention);
+  tache.responsables = data.responsables;
+
+  await tache.save();
+  return tache;
+};
+
+const findServicesInIntervention = async (idIntervention) => {
+  const objectId = new mongoose.Types.ObjectId(idIntervention);
+
+  let taches = await Tache.aggregate([
+    {
+      $match: {
+        intervention: objectId,
+      },
+    },
+    {
+      $lookup: {
+        from: "services",
+        localField: "nom",
+        foreignField: "nom",
+        as: "service",
+      },
+    },
+    {
+      $project: {
+        _id: 1,
+        estimation: 1,
+        service: { $arrayElemAt: ["$service", 0] },
+      },
+    },
+  ]);
+  console.log(taches);
+
+  return taches.map((tache) => ({
+    ...tache.service,
+    estimation: tache.estimation,
+  }));
+};
+
 const findAllCommentsByIdTache = async (idTache) => {
   const tache = await Tache.findOne({
     _id: new mongoose.Types.ObjectId(idTache),
@@ -468,6 +521,8 @@ module.exports = {
   deleteTache,
   updateTacheStatus,
   findTachesByIdIntervention,
+  addTaskToIntervention,
+  findServicesInIntervention,
   findAllCommentsByIdTache,
   addCommentToTache,
 };
