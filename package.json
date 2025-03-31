@@ -3,7 +3,8 @@
   "packageManager": "yarn@4.7.0",
   "main": "src/index.js",
   "scripts": {
-    "dev": "nodemon src/index.js"
+    "dev": "nodemon src/index.js",
+    "start": "node src/index.js"
   },
   "dependencies": {
     "body-parser": "^1.20.3",
