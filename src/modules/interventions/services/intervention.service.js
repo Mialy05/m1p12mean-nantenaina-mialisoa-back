@@ -38,14 +38,12 @@ const filterByResp = (userRole, userId) => {
   return {};
 };
 
-// TODO: rehefa méca no mitady intervention d'une véhicule dia lasa tsy hitany raha ohatra ka tsy nanao intervention tao izy
 const findAllInterventions = async (
+  userId,
   userRole,
   filter = {},
   page = 1,
-  limit = PAGINATION_ROW,
-  userRequestRole,
-  userRequestId
+  limit = PAGINATION_ROW
 ) => {
   const interventions = await Intervention.aggregate([
     {
@@ -67,11 +65,7 @@ const findAllInterventions = async (
         as: "taches",
       },
     },
-    {
-      $match: {
-        ...filterByResp(userRequestRole, userRequestId),
-      },
-    },
+
     {
       $addFields: {
         taches: {
@@ -103,12 +97,12 @@ const findAllInterventions = async (
           modele: 1,
           immatriculation: 1,
         },
-        client: 1,
+        client: userRole == UTILISATEUR_ROLES.manager ? 1 : undefined,
         taches: {
           _id: 1,
           status: 1,
           nom: 1,
-          ...showResponsable(userRequestRole),
+          ...showResponsable(userRole),
         },
       },
     },
@@ -117,6 +111,7 @@ const findAllInterventions = async (
   for (let intervention of interventions) {
     // progression
     let progression = 0;
+    let isResponsable = false;
     for (let tache of intervention.taches) {
       const resp = await Utilisateurs.find(
         {
@@ -136,8 +131,14 @@ const findAllInterventions = async (
         progression += 0.5;
       }
       tache.status = TACHE_STATUS[tache.status];
+
       tache.responsables = resp;
+
+      if (resp.filter((r) => r._id == userId)[0]) {
+        isResponsable = true;
+      }
     }
+    intervention.isResponsable = isResponsable;
     if (intervention.taches.length > 0) {
       intervention.progression = roundNumberTo2(
         (progression / intervention.taches.length) * 100
@@ -487,7 +488,6 @@ const findAllCommentsByIdTache = async (idTache) => {
   }
 };
 
-// TODO: fuseau horaire
 const addCommentToTache = async (idTache, comment, idUser) => {
   const tache = await Tache.findOne({
     _id: new mongoose.Types.ObjectId(idTache),
