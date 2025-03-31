@@ -9,7 +9,10 @@ const router = require("express").Router();
 
 router.get(
   ``,
-  authorizationMiddleware([UTILISATEUR_ROLES.manager]),
+  authorizationMiddleware([
+    UTILISATEUR_ROLES.manager,
+    UTILISATEUR_ROLES.mecanicien,
+  ]),
   UtilisateurController.findAll
 );
 
