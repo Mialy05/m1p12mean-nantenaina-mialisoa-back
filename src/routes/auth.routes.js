@@ -6,5 +6,6 @@ router.get("/test", AuthController.generateJWTTest);
 router.get("/manager", AuthController.generateJWTTestManager);
 router.get("/meca", AuthController.generateJWTTestMeca);
 router.post("/login", AuthController.login);
+router.post("/bo/login", AuthController.loginBO);
 
 module.exports = router;

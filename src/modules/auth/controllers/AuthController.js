@@ -1,5 +1,5 @@
 const { UTILISATEUR_ROLES } = require("../constant/utilisateur.constant");
-const { generateJWTRole } = require("../services/auth.service");
+const { generateJWTRole, loginBOService } = require("../services/auth.service");
 const { loginService } = require("../services/auth.service");
 const ApiResponse = require("../../../shared/types/ApiResponse");
 
@@ -22,6 +22,16 @@ class AuthController {
     try {
       const { email, password } = req.body;
       const token = await loginService(email, password);
+      res.json(ApiResponse.success(token));
+    } catch (err) {
+      res.status(401).json(ApiResponse.error(err.message, 401));
+    }
+  }
+
+  static async loginBO(req, res) {
+    try {
+      const { email, password } = req.body;
+      const token = await loginBOService(email, password);
       res.json(ApiResponse.success(token));
     } catch (err) {
       res.status(401).json(ApiResponse.error(err.message, 401));
