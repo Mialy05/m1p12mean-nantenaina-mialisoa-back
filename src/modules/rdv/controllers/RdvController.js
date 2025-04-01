@@ -10,6 +10,9 @@ const {
   findAllRdv,
   findAllDemandeRdv,
   findAllAcceptedRdv,
+  createRdv,
+  acceptRdvService,
+  planifyRdv,
 } = require("../services/rdv.service");
 const {
   findAllDemandeDevis,
@@ -25,28 +28,20 @@ class RdvController {
       return;
     }
     try {
-      const devis = await Devis.findOne({ _id: idDevis });
-      if (!devis) {
-        res.status(400).json(ApiResponse.error("Devis introuvable"));
-        return;
-      }
-      if (devis.status !== 0) {
-        res.status(400).json(ApiResponse.error("Devis déjà validé"));
-        return;
-      }
-      devis.status = DEVIS_WAIT_RDV;
-      await devis.save({ session });
-
-      const rdv = new RendezVous();
-      rdv.devis = idDevis;
-      rdv.dateCreation = dayjs();
-      await rdv.save({ session });
-
+      await createRdv(idDevis, session);
       await session.commitTransaction();
       res.json(ApiResponse.success(rdv, "Rendez-vous créé avec succès"));
     } catch (error) {
       console.error(error);
       await session.abortTransaction();
+      if (error.message === "Devis introuvable") {
+        res.status(400).json(ApiResponse.error("Devis introuvable"));
+        return;
+      }
+      if (error.message === "Devis déjà validé") {
+        res.status(400).json(ApiResponse.error("Devis déjà validé"));
+        return;
+      }
       res.json(
         ApiResponse.error("Erreur lors de la création du rendez-vous", error)
       );
@@ -59,37 +54,7 @@ class RdvController {
     const session = await mongoose.startSession();
     session.startTransaction();
     try {
-      const idRdv = req.params.id;
-      const rdv = await RendezVous.findOne({ _id: idRdv });
-      if (!rdv) {
-        res.json(ApiResponse.error("Rendez-vous introuvable"));
-        return;
-      }
-      const idDevis = rdv.devis;
-      rdv.status = 10;
-      rdv.date = dayjs(req.body.date);
-
-      const devis = await Devis.findOne({ _id: idDevis });
-      devis.status = 10;
-      await devis.save({ session });
-
-      const intervention = new Intervention();
-      intervention.vehicule = devis.vehicule;
-      intervention.client = devis.client;
-      intervention.date = rdv.date;
-      const idIntervention = await intervention.save({ session });
-
-      for (const service of devis.services) {
-        const tache = new Tache();
-
-        tache.nom = service.nom;
-        tache.estimation = service.heures;
-        tache.intervention = idIntervention;
-
-        await tache.save({ session });
-      }
-
-      await rdv.save({ session });
+      await acceptRdvService(req.params.idRdv, req.body.dateAccept, session);
 
       await session.commitTransaction();
       // await session.abortTransaction();
@@ -98,6 +63,10 @@ class RdvController {
     } catch (error) {
       console.error(error);
       await session.abortTransaction();
+      if (error.message === "Rendez-vous introuvable") {
+        res.status(400).json(ApiResponse.error("Rendez-vous introuvable"));
+        return;
+      }
       res
         .status(500)
         .json(
@@ -141,6 +110,43 @@ class RdvController {
         .status(500)
         .json(
           ApiResponse.error("Erreur lors de la récupération des RDV", error)
+        );
+    }
+  }
+
+  static async planifyRdvHandler(req, res) {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
+      const idDevis = req.body.idDevis;
+      const dateAccept = req.body.date;
+
+      await planifyRdv(dateAccept, idDevis, session);
+      await session.commitTransaction();
+      res.json(ApiResponse.success(null, "Rendez-vous planifié avec succès"));
+    } catch (error) {
+      await session.abortTransaction();
+      console.error(error);
+      if (error.message === "Rendez-vous introuvable") {
+        res.status(400).json(ApiResponse.error("Rendez-vous introuvable"));
+        return;
+      }
+      if (error.message === "Devis introuvable") {
+        res.status(400).json(ApiResponse.error("Devis introuvable"));
+        return;
+      }
+      if (error.message === "Devis déjà validé") {
+        res.status(400).json(ApiResponse.error("Devis déjà validé"));
+        return;
+      }
+      res
+        .status(500)
+        .json(
+          ApiResponse.error(
+            "Erreur lors de la planification du rendez-vous",
+            error
+          )
         );
     }
   }
