@@ -1,4 +1,4 @@
-const UtilisateurController = require("../modules/utilisateur/controllers/utilisateur.controller");
+const UtilisateurController = require("../modules/utilisateur/controllers/utilisateurController");
 const {
   UTILISATEUR_ROLES,
 } = require("../modules/auth/constant/utilisateur.constant");
@@ -14,6 +14,18 @@ router.get(
     UTILISATEUR_ROLES.mecanicien,
   ]),
   UtilisateurController.findAll
+);
+
+router.get(
+  `/mecaniciens`,
+  authorizationMiddleware([UTILISATEUR_ROLES.manager]),
+  UtilisateurController.findAllPaginatedMecano
+);
+
+router.get(
+  `/:id/taches`,
+  authorizationMiddleware([UTILISATEUR_ROLES.manager]),
+  UtilisateurController.findAllTacheOfMecanicien
 );
 
 module.exports = router;
