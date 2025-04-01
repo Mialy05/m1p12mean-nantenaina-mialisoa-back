@@ -53,12 +53,37 @@ const loginService = async (email, pwd) => {
     email,
     pwd,
     status: UTILISATEUR_STATUS.active,
+    role: UTILISATEUR_ROLES.client,
   });
   if (utilisateur) {
     const token = generateJWTToken(utilisateur);
     return { token };
   }
-  throw new Error("Utilisateur non trouvé");
+  throw new Error("Email ou mot de passe incorrect");
 };
 
-module.exports = { generateJWTTokenRole, findUtilisateurById, loginService };
+const loginBOService = async (email, pwd) => {
+  const utilisateur = await Utilisateur.findOne({
+    $and: [
+      { email, pwd, status: UTILISATEUR_STATUS.active },
+      {
+        $or: [
+          { role: UTILISATEUR_ROLES.manager },
+          { role: UTILISATEUR_ROLES.mecanicien },
+        ],
+      },
+    ],
+  });
+  if (utilisateur) {
+    const token = generateJWTToken(utilisateur);
+    return { token };
+  }
+  throw new Error("Email ou mot de passe incorrect");
+};
+
+module.exports = {
+  generateJWTTokenRole,
+  findUtilisateurById,
+  loginService,
+  loginBOService,
+};
