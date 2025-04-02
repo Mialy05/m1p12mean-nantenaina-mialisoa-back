@@ -4,15 +4,39 @@ const Devis = require("../../../models/Devis");
 const { DEVIS_WAIT_RDV } = require("../../../shared/constants/constant");
 const Intervention = require("../../../models/Intervention");
 const Tache = require("../../../models/Tache");
-const findAllDemandeRdv = async (page = 1, limit = 50) => {
+const {
+  UTILISATEUR_ROLES,
+} = require("../../auth/constant/utilisateur.constant");
+const Utilisateur = require("../../../models/Utilisateur");
+
+const userFilter = async (userRole, userId) => {
+  if (userRole == UTILISATEUR_ROLES.client) {
+    const user = await Utilisateur.findOne({ _id: userId });
+    if (!user) {
+      throw new Error("Utilisateur non trouvé.");
+    }
+    return {
+      "devis.client.email": user.email,
+    };
+  } else {
+    return {};
+  }
+};
+
+const findAllDemandeRdv = async (userId, userRole, page = 1, limit = 50) => {
   const filter = {
-    $or: [
+    $and: [
       {
-        date: { $exists: false },
+        $or: [
+          {
+            date: { $exists: false },
+          },
+          {
+            date: null,
+          },
+        ],
       },
-      {
-        date: null,
-      },
+      await userFilter(userRole, userId),
     ],
   };
 
@@ -53,7 +77,7 @@ const findAllDemandeRdv = async (page = 1, limit = 50) => {
     count,
   };
 };
-const findAllAcceptedRdv = async (startDate, endDate, userId) => {
+const findAllAcceptedRdv = async (startDate, endDate, userId, userRole) => {
   if (!startDate || !endDate) {
     throw new Error("startDate and endDate are required");
   }
@@ -72,14 +96,15 @@ const findAllAcceptedRdv = async (startDate, endDate, userId) => {
       {
         date: { $lte: dayjs(endDate).toDate() },
       },
+      await userFilter(userRole, userId),
     ],
   };
 
-  if (userId) {
-    filter.$and.push({
-      "devis.client.id": userId,
-    });
-  }
+  // if (userId) {
+  //   filter.$and.push({
+  //     "devis.client.id": userId,
+  //   });
+  // }
 
   const rdvs = await RendezVous.aggregate([
     {
@@ -124,7 +149,7 @@ const createRdv = async (idDevis, session) => {
 
   const rdv = new RendezVous();
   rdv.devis = idDevis;
-  rdv.dateCreation = dayjs();
+  rdv.dateCreation = dayjs().toDate();
   await rdv.save({ session });
 
   return rdv;

@@ -51,8 +51,18 @@ app.use(
   authMiddleware,
   require("./routes/intervention.routes.js")
 );
-app.use("/utilisateurs", require("./routes/utilisateur.routes.js"));
-app.use("/factures", require("./routes/facture.routes.js"));
+app.use(
+  "/utilisateurs",
+  authMiddleware,
+  require("./routes/utilisateur.routes.js")
+);
+app.use("/factures", authMiddleware, require("./routes/facture.routes.js"));
+app.use(
+  "/dashboard",
+  authMiddleware,
+  authorizationMiddleware([UTILISATEUR_ROLES.manager]),
+  require("./routes/dashboard.routes.js")
+);
 
 app.use("/mock/rdv", async (req, res) => {
   const rdv = await RendezVous.find().populate("devis");

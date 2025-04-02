@@ -6,12 +6,13 @@ const { GARAGE } = require("../../../shared/constants/constant");
 const {
   UTILISATEUR_ROLES,
 } = require("../../auth/constant/utilisateur.constant");
+const Utilisateur = require("../../../models/Utilisateur");
 require("dayjs/locale/fr");
 dayjs.locale("fr");
 
 const createFacture = async (data) => {
   const facture = new Facture();
-  facture.date = dayjs().toISOString();
+  facture.date = dayjs().toDate();
   facture.client = data.client;
   facture.vehicule = data.vehicule;
   facture.details = data.details;
@@ -41,7 +42,12 @@ const createFacture = async (data) => {
 };
 
 const findAllFactures = async (userRole, userId, page, limit) => {
-  const filter = userRole === UTILISATEUR_ROLES.manager ? {} : { user: userId };
+  const user = await Utilisateur.findOne({ _id: userId });
+
+  const filter =
+    userRole === UTILISATEUR_ROLES.manager
+      ? {}
+      : { "client.email": user.email };
   const factures = await Facture.find(filter)
     .skip((page - 1) * limit)
     .limit(limit);

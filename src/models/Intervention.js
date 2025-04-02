@@ -4,7 +4,7 @@ const interventionSchema = new mongoose.Schema({
   date: {
     type: Date,
     required: true,
-    default: dayjs(),
+    default: dayjs().toDate(),
   },
   status: {
     type: Number,

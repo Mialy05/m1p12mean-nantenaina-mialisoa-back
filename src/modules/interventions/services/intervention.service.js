@@ -102,6 +102,7 @@ const findAllInterventions = async (
           _id: 1,
           status: 1,
           nom: 1,
+          estimation: 1,
           ...showResponsable(userRole),
         },
       },
@@ -504,7 +505,7 @@ const addCommentToTache = async (idTache, comment, idUser) => {
     const newComment = {
       auteur: user,
       contenu: comment.contenu,
-      date: new dayjs(),
+      date: new dayjs().toDate(),
     };
     tache.commentaires.push(newComment);
     await tache.save();

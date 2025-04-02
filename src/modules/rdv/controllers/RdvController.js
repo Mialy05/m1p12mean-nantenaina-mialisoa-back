@@ -31,7 +31,7 @@ class RdvController {
       return;
     }
     try {
-      await createRdv(idDevis, session);
+      const rdv = await createRdv(idDevis, session);
       await session.commitTransaction();
       res.json(ApiResponse.success(rdv, "Rendez-vous créé avec succès"));
     } catch (error) {
@@ -57,7 +57,7 @@ class RdvController {
     const session = await mongoose.startSession();
     session.startTransaction();
     try {
-      await acceptRdvService(req.params.idRdv, req.body.dateAccept, session);
+      const rdv = await acceptRdvService(req.params.id, req.body.date, session);
 
       await session.commitTransaction();
       // await session.abortTransaction();
@@ -85,7 +85,10 @@ class RdvController {
 
   static async getAllDemandeRdv(req, res) {
     try {
-      const data = await findAllDemandeRdv();
+      const data = await findAllDemandeRdv(
+        req.query.userId,
+        req.query.userRole
+      );
       res.json(ApiResponse.success(data, "Rendez-vous récupérés avec succès"));
     } catch (error) {
       console.error(error);
@@ -109,7 +112,12 @@ class RdvController {
       if (req.query.userRole == UTILISATEUR_ROLES.client) {
         userId = req.query.userId;
       }
-      const data = await findAllAcceptedRdv(startDate, endDate, userId);
+      const data = await findAllAcceptedRdv(
+        startDate,
+        endDate,
+        userId,
+        req.query.userRole
+      );
       res.json(ApiResponse.success(data, "Rendez-vous récupérés avec succès"));
     } catch (error) {
       console.error(error);
