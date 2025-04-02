@@ -4,6 +4,7 @@ const Intervention = require("../../../models/Intervention");
 const Devis = require("../../../models/Devis");
 const RendezVous = require("../../../models/RendezVous");
 const Tache = require("../../../models/Tache");
+const { TACHE_STATUS } = require("../../../shared/constants/constant");
 
 const findRecettes = async (dateStart, dateEnd) => {
   const filter = {
@@ -310,7 +311,7 @@ const findCountTaskByStatusOfMechanic = async (idMec, dateStart, dateEnd) => {
       },
     },
   ]);
-  return data;
+  return data.map((item) => ({ ...item, status: TACHE_STATUS[item.status] }));
 };
 
 module.exports = {

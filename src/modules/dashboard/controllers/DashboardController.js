@@ -102,6 +102,48 @@ class DashboardController {
     }
   }
 
+  static async interventionOfMechanic(req, res) {
+    try {
+      const data = await nbrInterventionOfMechanic(
+        new mongoose.Types.ObjectId(req.query.userId),
+        dayjs().startOf("month"),
+        dayjs().endOf("month")
+      );
+      res.json(ApiResponse.success(data));
+    } catch (error) {
+      console.log(error);
+      res.status(500).json(ApiResponse.error(error.message));
+    }
+  }
+
+  static async hourWorked(req, res) {
+    try {
+      const data = await findHourWorked(
+        new mongoose.Types.ObjectId(req.query.userId),
+        dayjs().startOf("month"),
+        dayjs().endOf("month")
+      );
+      res.json(ApiResponse.success({ heures: data }));
+    } catch (error) {
+      console.log(error);
+      res.status(500).json(ApiResponse.error(error.message));
+    }
+  }
+
+  static async taskResume(req, res) {
+    try {
+      const data = await findCountTaskByStatusOfMechanic(
+        new mongoose.Types.ObjectId(req.query.userId),
+        dayjs().startOf("month"),
+        dayjs().endOf("month")
+      );
+      res.json(ApiResponse.success(data));
+    } catch (error) {
+      console.log(error);
+      res.status(500).json(ApiResponse.error(error.message));
+    }
+  }
+
   static async testDashboard(req, res) {
     try {
       const data = await findCountTaskByStatusOfMechanic(
