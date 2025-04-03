@@ -41,7 +41,7 @@ class DevisController {
       const { vehiculeId, _id, ...demandeData } = req.body;
       const demande = new DemandeDevis(demandeData);
       demande.status = 0;
-      demande.dateDemande = dayjs();
+      demande.dateDemande = dayjs().toDate();
       demande.utilisateur = utilisateur;
 
       if (vehiculeId === "0") {
@@ -153,7 +153,7 @@ class DevisController {
 
       const devis = new Devis();
       devis.numero = dayjs().format("YYYYMMDDHHmmss");
-      devis.date = dayjs().toISOString();
+      devis.date = dayjs().toDate();
       devis.status = 0;
       devis.vehicule = req.body.vehicule;
       if (req.body.vehicule._id == "") {

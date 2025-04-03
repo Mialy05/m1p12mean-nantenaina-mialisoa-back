@@ -21,6 +21,7 @@ const {
   findAllCommentsByIdTache,
   addCommentToTache,
 } = require("../services/intervention.service");
+const Utilisateur = require("../../../models/Utilisateur");
 
 class InterventionController {
   static async findAll(req, res) {
@@ -33,6 +34,13 @@ class InterventionController {
       immatriculation = "",
     } = req.query;
 
+    const user = await Utilisateur.findOne({ _id: userId });
+
+    if (!user) {
+      res.status(422).json(ApiResponse.error("Utilisateur non trouvé."));
+      return;
+    }
+
     const filter = {
       "vehicule.immatriculation": {
         $regex: `(?=.*${immatriculation})`,
@@ -41,7 +49,7 @@ class InterventionController {
     };
 
     if (req.query.userRole === UTILISATEUR_ROLES.client) {
-      filter["client.id"] = new mongoose.Types.ObjectId(userId);
+      filter["client.email"] = user.email;
     }
 
     const nomParts = nom.split(/\s+/).filter((part) => part.trim() !== "");

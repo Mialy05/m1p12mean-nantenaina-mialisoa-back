@@ -44,13 +44,10 @@ app.use(
   ]),
   require("./routes/rdv.routes.js")
 );
-app.use(
-  "/interventions",
-  authMiddleware,
-  require("./routes/intervention.routes.js")
-);
+app.use("/interventions", require("./routes/intervention.routes.js"));
 app.use("/utilisateurs", require("./routes/utilisateur.routes.js"));
 app.use("/factures", require("./routes/facture.routes.js"));
+app.use("/dashboard", require("./routes/dashboard.routes.js"));
 
 app.use("/mock/rdv", async (req, res) => {
   const rdv = await RendezVous.find().populate("devis");

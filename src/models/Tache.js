@@ -13,7 +13,7 @@ const commentaireSchema = new mongoose.Schema({
   },
   date: {
     type: Date,
-    default: dayjs(),
+    default: dayjs().toDate(),
   },
 });
 

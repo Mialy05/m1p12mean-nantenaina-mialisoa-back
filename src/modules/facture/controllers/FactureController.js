@@ -20,7 +20,7 @@ class FactureController {
   }
 
   static async getAllFactures(req, res) {
-    const { userRole, userId } = req;
+    const { userRole, userId } = req.query;
     const { page = 1, limit = 10 } = req.query;
     try {
       const data = await findAllFactures(
