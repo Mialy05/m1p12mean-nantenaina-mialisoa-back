@@ -53,6 +53,7 @@ const CAUSE_ERROR = {
   notFound: 404,
   forbidden: 403,
   validationError: 422,
+  badRequest: 400,
 };
 
 module.exports = {

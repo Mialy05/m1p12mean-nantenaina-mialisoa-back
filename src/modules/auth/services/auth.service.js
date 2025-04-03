@@ -5,6 +5,7 @@ const {
   UTILISATEUR_ROLES,
 } = require("../constant/utilisateur.constant");
 require("dotenv").configDotenv();
+const bcrypt = require("bcrypt");
 
 const secretKey = process.env.JWT_SECRET;
 
@@ -48,14 +49,17 @@ const findUtilisateurById = async (id) => {
   return utilisateur;
 };
 
+const comparePwd = async (textPwd, hashedPwd) => {
+  return await bcrypt.compare(textPwd, hashedPwd);
+};
+
 const loginService = async (email, pwd) => {
   const utilisateur = await Utilisateur.findOne({
     email,
-    pwd,
     status: UTILISATEUR_STATUS.active,
     role: UTILISATEUR_ROLES.client,
   });
-  if (utilisateur) {
+  if (utilisateur && (await comparePwd(pwd, utilisateur.pwd))) {
     const token = generateJWTToken(utilisateur);
     return { token };
   }
@@ -65,7 +69,7 @@ const loginService = async (email, pwd) => {
 const loginBOService = async (email, pwd) => {
   const utilisateur = await Utilisateur.findOne({
     $and: [
-      { email, pwd, status: UTILISATEUR_STATUS.active },
+      { email, status: UTILISATEUR_STATUS.active },
       {
         $or: [
           { role: UTILISATEUR_ROLES.manager },
@@ -74,7 +78,8 @@ const loginBOService = async (email, pwd) => {
       },
     ],
   });
-  if (utilisateur) {
+
+  if (utilisateur && (await comparePwd(pwd, utilisateur.pwd))) {
     const token = generateJWTToken(utilisateur);
     return { token };
   }

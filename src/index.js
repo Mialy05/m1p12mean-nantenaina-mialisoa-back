@@ -26,7 +26,6 @@ app.use("/auth", require("./routes/auth.routes.js"));
 
 app.use(
   "/devis",
-  authMiddleware,
   authorizationMiddleware([
     UTILISATEUR_ROLES.manager,
     UTILISATEUR_ROLES.client,
@@ -39,7 +38,6 @@ app.use("/vehicules", require("./routes/vehicule.routes.js"));
 app.use("/services", require("./routes/service.routes.js"));
 app.use(
   "/rdv",
-  authMiddleware,
   authorizationMiddleware([
     UTILISATEUR_ROLES.manager,
     UTILISATEUR_ROLES.client,
