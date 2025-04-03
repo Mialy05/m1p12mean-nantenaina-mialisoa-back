@@ -4,22 +4,27 @@ const Intervention = require("../../../models/Intervention");
 const Devis = require("../../../models/Devis");
 const RendezVous = require("../../../models/RendezVous");
 const Tache = require("../../../models/Tache");
-const { TACHE_STATUS } = require("../../../shared/constants/constant");
+const {
+  TACHE_STATUS,
+  DATE_FILTER_FORMAT,
+} = require("../../../shared/constants/constant");
 const {
   UTILISATEUR_ROLES,
 } = require("../../auth/constant/utilisateur.constant");
+const customParseFormat = require("dayjs/plugin/customParseFormat");
 
+dayjs.extend(customParseFormat);
 const findRecettes = async (dateStart, dateEnd) => {
   const filter = {
     $and: [
       {
         date: {
-          $gte: dayjs(dateStart).toDate(),
+          $gte: dayjs(dateStart, DATE_FILTER_FORMAT).startOf("day").toDate(),
         },
       },
       {
         date: {
-          $lte: dayjs(dateEnd).toDate(),
+          $lte: dayjs(dateEnd, DATE_FILTER_FORMAT).endOf("day").toDate(),
         },
       },
     ],
@@ -52,16 +57,18 @@ const findRecettes = async (dateStart, dateEnd) => {
 };
 
 const nbrInterventionStat = async (dateStart, dateEnd) => {
+  const gte = dayjs(dateStart, DATE_FILTER_FORMAT).startOf("day").toDate();
+  const lte = dayjs(dateEnd, DATE_FILTER_FORMAT).endOf("day").toDate();
   const filter = {
     $and: [
       {
         date: {
-          $gte: dayjs(dateStart).toDate(),
+          $gte: gte,
         },
       },
       {
         date: {
-          $lte: dayjs(dateEnd).toDate(),
+          $lte: lte,
         },
       },
     ],
@@ -69,8 +76,8 @@ const nbrInterventionStat = async (dateStart, dateEnd) => {
 
   const interventions = await Intervention.countDocuments({
     date: {
-      $gte: dateStart.toDate(),
-      $lte: dateEnd.toDate(),
+      $gte: gte,
+      $lte: lte,
     },
   });
   const interventionsByApp = await Intervention.countDocuments({
@@ -79,6 +86,7 @@ const nbrInterventionStat = async (dateStart, dateEnd) => {
   });
   return {
     interventions,
+    interventionsByApp,
     interventionsByAppPercent: Number(
       ((interventionsByApp * 100) / interventions).toFixed(2)
     ),
@@ -86,10 +94,12 @@ const nbrInterventionStat = async (dateStart, dateEnd) => {
 };
 
 const findDevisRdvStats = async (dateStart, dateEnd) => {
+  const gte = dayjs(dateStart, DATE_FILTER_FORMAT).startOf("day").toDate();
+  const lte = dayjs(dateEnd, DATE_FILTER_FORMAT).endOf("day").toDate();
   const nbrDevis = await Devis.countDocuments({
     date: {
-      $gte: dayjs(dateStart).toDate(),
-      $lte: dayjs(dateEnd).toDate(),
+      $gte: gte,
+      $lte: lte,
     },
   });
 
@@ -97,12 +107,12 @@ const findDevisRdvStats = async (dateStart, dateEnd) => {
     $and: [
       {
         dateCreation: {
-          $gte: dayjs(dateStart).toDate(),
+          $gte: gte,
         },
       },
       {
         dateCreation: {
-          $lte: dayjs(dateEnd).toDate(),
+          $lte: lte,
         },
       },
       {
@@ -121,6 +131,9 @@ const findDevisRdvStats = async (dateStart, dateEnd) => {
 };
 
 const findMoreAskedService = async (dateStart, dateEnd) => {
+  const gte = dayjs(dateStart, DATE_FILTER_FORMAT).startOf("day").toDate();
+  const lte = dayjs(dateEnd, DATE_FILTER_FORMAT).endOf("day").toDate();
+
   const data = await Tache.aggregate([
     {
       $lookup: {
@@ -136,8 +149,8 @@ const findMoreAskedService = async (dateStart, dateEnd) => {
     {
       $match: {
         "interventionData.date": {
-          $gte: dayjs(dateStart).toDate(),
-          $lte: dayjs(dateEnd).toDate(),
+          $gte: gte,
+          $lte: lte,
         },
       },
     },
@@ -152,16 +165,19 @@ const findMoreAskedService = async (dateStart, dateEnd) => {
 };
 
 const findClientFidelity = async (dateStart, dateEnd) => {
+  const gte = dayjs(dateStart, DATE_FILTER_FORMAT).startOf("day").toDate();
+  const lte = dayjs(dateEnd, DATE_FILTER_FORMAT).endOf("day").toDate();
+
   const filter = {
     $and: [
       {
         date: {
-          $gte: dayjs(dateStart).toDate(),
+          $gte: gte,
         },
       },
       {
         date: {
-          $lte: dayjs(dateEnd).toDate(),
+          $lte: lte,
         },
       },
     ],
@@ -200,7 +216,9 @@ const findClientFidelity = async (dateStart, dateEnd) => {
 };
 
 const nbrInterventionOfMechanic = async (idMec, dateStart, dateEnd) => {
-  // console.log(idMec, dateStart, dateEnd);
+  const gte = dayjs(dateStart, DATE_FILTER_FORMAT).startOf("day").toDate();
+  const lte = dayjs(dateEnd, DATE_FILTER_FORMAT).endOf("day").toDate();
+
   const data = await Tache.aggregate([
     {
       $match: {
@@ -221,8 +239,8 @@ const nbrInterventionOfMechanic = async (idMec, dateStart, dateEnd) => {
     {
       $match: {
         "interventionData.date": {
-          $gte: dayjs(dateStart).toDate(),
-          $lte: dayjs(dateEnd).toDate(),
+          $gte: gte,
+          $lte: lte,
         },
       },
     },
@@ -240,6 +258,9 @@ const nbrInterventionOfMechanic = async (idMec, dateStart, dateEnd) => {
 };
 
 const findHourWorked = async (idMec, dateStart, dateEnd) => {
+  const gte = dayjs(dateStart, DATE_FILTER_FORMAT).startOf("day").toDate();
+  const lte = dayjs(dateEnd, DATE_FILTER_FORMAT).endOf("day").toDate();
+
   const data = await Tache.aggregate([
     {
       $match: {
@@ -260,8 +281,8 @@ const findHourWorked = async (idMec, dateStart, dateEnd) => {
     {
       $match: {
         "interventionData.date": {
-          $gte: dayjs(dateStart).toDate(),
-          $lte: dayjs(dateEnd).toDate(),
+          $gte: gte,
+          $lte: lte,
         },
       },
     },
@@ -276,6 +297,9 @@ const findHourWorked = async (idMec, dateStart, dateEnd) => {
 };
 
 const findCountTaskByStatusOfMechanic = async (idMec, dateStart, dateEnd) => {
+  const gte = dayjs(dateStart, DATE_FILTER_FORMAT).startOf("day").toDate();
+  const lte = dayjs(dateEnd, DATE_FILTER_FORMAT).endOf("day").toDate();
+
   const data = await Tache.aggregate([
     {
       $match: {
@@ -296,8 +320,8 @@ const findCountTaskByStatusOfMechanic = async (idMec, dateStart, dateEnd) => {
     {
       $match: {
         "interventionData.date": {
-          $gte: dayjs(dateStart).toDate(),
-          $lte: dayjs(dateEnd).toDate(),
+          $gte: gte,
+          $lte: lte,
         },
       },
     },

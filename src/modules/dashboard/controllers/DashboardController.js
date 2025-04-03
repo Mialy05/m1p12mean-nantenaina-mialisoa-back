@@ -12,17 +12,30 @@ const {
   findMoreAskedService,
 } = require("../services/dashboard.service");
 const { default: mongoose } = require("mongoose");
+const { DATE_FILTER_FORMAT } = require("../../../shared/constants/constant");
+
+// TODO: handle string vide
+
+const defaultStart = dayjs().startOf("month").format(DATE_FILTER_FORMAT);
+const defaultEnd = dayjs().endOf("month").format(DATE_FILTER_FORMAT);
 
 class DashboardController {
   static async getRecettes(req, res) {
+    // format DD-MM-YYYY
+    const {
+      start = dayjs().startOf("month").format(DATE_FILTER_FORMAT),
+      end = dayjs().endOf("month").format(DATE_FILTER_FORMAT),
+    } = req.query;
+    console.log(end);
+
     try {
       const monthlyRecette = await findRecettes(
-        dayjs().startOf("year"),
-        dayjs().endOf("year")
+        start || defaultStart,
+        end || defaultEnd
       );
       const recetteOfActualMonth = await findRecettes(
-        dayjs().startOf("month"),
-        dayjs().endOf("month")
+        start || defaultStart,
+        end || defaultEnd
       );
       for (let month = 0; month < 12; month++) {
         if (monthlyRecette.some((recette) => recette._id.month === month + 1)) {
@@ -51,10 +64,14 @@ class DashboardController {
   }
 
   static async nbrInterventionStat(req, res) {
+    const {
+      start = dayjs().startOf("month").format(DATE_FILTER_FORMAT),
+      end = dayjs().endOf("month").format(DATE_FILTER_FORMAT),
+    } = req.query;
     try {
       const data = await nbrInterventionStat(
-        dayjs().startOf("month"),
-        dayjs().endOf("month")
+        start || defaultStart,
+        end || defaultEnd
       );
       res.json(ApiResponse.success(data));
     } catch (error) {
@@ -64,10 +81,14 @@ class DashboardController {
   }
 
   static async devisRdvStat(req, res) {
+    const {
+      start = dayjs().startOf("month").format(DATE_FILTER_FORMAT),
+      end = dayjs().endOf("month").format(DATE_FILTER_FORMAT),
+    } = req.query;
     try {
       const data = await findDevisRdvStats(
-        dayjs().startOf("month"),
-        dayjs().endOf("month")
+        start || defaultStart,
+        end || defaultEnd
       );
       res.json(ApiResponse.success(data));
     } catch (error) {
@@ -77,10 +98,14 @@ class DashboardController {
   }
 
   static async moreAskedService(req, res) {
+    const {
+      start = dayjs().startOf("month").format(DATE_FILTER_FORMAT),
+      end = dayjs().endOf("month").format(DATE_FILTER_FORMAT),
+    } = req.query;
     try {
       const data = await findMoreAskedService(
-        dayjs().startOf("month"),
-        dayjs().endOf("month")
+        start || defaultStart,
+        end || defaultEnd
       );
       res.json(ApiResponse.success(data));
     } catch (error) {
@@ -90,10 +115,14 @@ class DashboardController {
   }
 
   static async clientFidelity(req, res) {
+    const {
+      start = dayjs().startOf("month").format(DATE_FILTER_FORMAT),
+      end = dayjs().endOf("month").format(DATE_FILTER_FORMAT),
+    } = req.query;
     try {
       const data = await findClientFidelity(
-        dayjs().startOf("month"),
-        dayjs().endOf("month")
+        start || defaultStart,
+        end || defaultEnd
       );
       res.json(ApiResponse.success(data));
     } catch (error) {
@@ -103,11 +132,15 @@ class DashboardController {
   }
 
   static async interventionOfMechanic(req, res) {
+    const {
+      start = dayjs().startOf("month").format(DATE_FILTER_FORMAT),
+      end = dayjs().endOf("month").format(DATE_FILTER_FORMAT),
+    } = req.query;
     try {
       const data = await nbrInterventionOfMechanic(
         new mongoose.Types.ObjectId(req.query.userId),
-        dayjs().startOf("month"),
-        dayjs().endOf("month")
+        start || defaultStart,
+        end || defaultEnd
       );
       res.json(ApiResponse.success(data));
     } catch (error) {
@@ -117,11 +150,15 @@ class DashboardController {
   }
 
   static async hourWorked(req, res) {
+    const {
+      start = dayjs().startOf("month").format(DATE_FILTER_FORMAT),
+      end = dayjs().endOf("month").format(DATE_FILTER_FORMAT),
+    } = req.query;
     try {
       const data = await findHourWorked(
         new mongoose.Types.ObjectId(req.query.userId),
-        dayjs().startOf("month"),
-        dayjs().endOf("month")
+        start || defaultStart,
+        end || defaultEnd
       );
       res.json(ApiResponse.success({ heures: data }));
     } catch (error) {
@@ -131,11 +168,15 @@ class DashboardController {
   }
 
   static async taskResume(req, res) {
+    const {
+      start = dayjs().startOf("month").format(DATE_FILTER_FORMAT),
+      end = dayjs().endOf("month").format(DATE_FILTER_FORMAT),
+    } = req.query;
     try {
       const data = await findCountTaskByStatusOfMechanic(
         new mongoose.Types.ObjectId(req.query.userId),
-        dayjs().startOf("month"),
-        dayjs().endOf("month")
+        start || defaultStart,
+        end || defaultEnd
       );
       res.json(ApiResponse.success(data));
     } catch (error) {
@@ -145,11 +186,15 @@ class DashboardController {
   }
 
   static async testDashboard(req, res) {
+    const {
+      start = dayjs().startOf("month").format(DATE_FILTER_FORMAT),
+      end = dayjs().endOf("month").format(DATE_FILTER_FORMAT),
+    } = req.query;
     try {
       const data = await findCountTaskByStatusOfMechanic(
         new mongoose.Types.ObjectId("67e8500ee5f826a5a01a1527"),
-        dayjs().startOf("month"),
-        dayjs().endOf("month")
+        start || defaultStart,
+        end || defaultEnd
       );
       res.json(ApiResponse.success(data));
     } catch (error) {
