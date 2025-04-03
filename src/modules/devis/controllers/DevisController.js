@@ -141,8 +141,9 @@ class DevisController {
     const session = await mongoose.startSession();
     session.startTransaction();
     try {
-      if (req.body.idDemande != "") {
-        const idDemande = req.body.idDemande;
+      const devis = new Devis();
+      const idDemande = req.body.idDemande;
+      if (idDemande) {
         const demande = await DemandeDevis.findById(idDemande);
         if (!demande) {
           throw new Error("Demande introuvable");
@@ -151,7 +152,7 @@ class DevisController {
         await demande.save({ session });
       }
 
-      const devis = new Devis();
+      devis.idDemandeDevis = idDemande;
       devis.numero = dayjs().format("YYYYMMDDHHmmss");
       devis.date = dayjs().toDate();
       devis.status = 0;

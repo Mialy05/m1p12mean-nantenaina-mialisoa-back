@@ -28,7 +28,21 @@ const getDemandeDevis = async (
     limit,
   };
 
-  const demandes = await DemandeDevis.find(filter)
+  const demandes = await DemandeDevis.find(filter, {
+    _id: 1,
+    vehicule: 1,
+    description: 1,
+    kilometrage: 1,
+    status: 1,
+    dateDemande: 1,
+    utilisateur: {
+      _id: 1,
+      nom: 1,
+      prenom: 1,
+      email: 1,
+      telephone: 1,
+    },
+  })
     .skip(pagination.skip)
     .limit(pagination.limit)
     .sort({ dateDemande: -1 })
