@@ -4,6 +4,7 @@ const {
 const InterventionController = require("../modules/interventions/controllers/InterventionController");
 const {
   authorizationMiddleware,
+  authMiddleware,
 } = require("../shared/middlewares/auth.middleware");
 
 const router = require("express").Router();
@@ -19,7 +20,7 @@ router.get(
   InterventionController.findById
 );
 
-router.get("/:id/taches", InterventionController.findAllTaches);
+router.get("/:id/taches", authMiddleware, InterventionController.findAllTaches);
 
 router.post(
   "/taches/:id/assign",
@@ -50,10 +51,28 @@ router.patch(
   InterventionController.updateStatus
 );
 
-router.get("/taches/:id/comments", InterventionController.findCommentsOfTache);
-router.post("/taches/:id/comments", InterventionController.commentTask);
+router.get(
+  "/taches/:id/comments",
+  authorizationMiddleware([
+    UTILISATEUR_ROLES.manager,
+    UTILISATEUR_ROLES.mecanicien,
+  ]),
+  InterventionController.findCommentsOfTache
+);
+router.post(
+  "/taches/:id/comments",
+  authorizationMiddleware([
+    UTILISATEUR_ROLES.manager,
+    UTILISATEUR_ROLES.mecanicien,
+  ]),
+  InterventionController.commentTask
+);
 
-router.post("/:id/taches", InterventionController.addTache);
+router.post(
+  "/:id/taches",
+  authorizationMiddleware([UTILISATEUR_ROLES.client]),
+  InterventionController.addTache
+);
 router.get(
   "/:id/services",
   authorizationMiddleware([

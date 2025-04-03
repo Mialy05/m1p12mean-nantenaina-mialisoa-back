@@ -231,6 +231,9 @@ class InterventionController {
     const { id } = req.params;
     const { contenu } = req.body;
     const userId = req.query.userId;
+
+    console.log(req.query);
+
     try {
       await addCommentToTache(id, { contenu: contenu }, userId);
       res.json(ApiResponse.success({}, `Commentaire ajouté`));
