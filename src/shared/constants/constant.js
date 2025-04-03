@@ -56,6 +56,8 @@ const CAUSE_ERROR = {
   badRequest: 400,
 };
 
+const DATE_FILTER_FORMAT = "DD-MM-YYYY";
+
 module.exports = {
   PAGINATION_ROW,
   DEMANDE_DEVIS_STATUS,
@@ -73,4 +75,5 @@ module.exports = {
   TACHE_DOING_STATUS,
   TACHE_DONE_STATUS,
   CAUSE_ERROR,
+  DATE_FILTER_FORMAT,
 };
