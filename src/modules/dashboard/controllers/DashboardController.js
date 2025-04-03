@@ -30,8 +30,8 @@ class DashboardController {
 
     try {
       const monthlyRecette = await findRecettes(
-        start || defaultStart,
-        end || defaultEnd
+        dayjs(start).startOf("year") || defaultStart,
+        dayjs(start).endOf("year") || defaultEnd
       );
       const recetteOfActualMonth = await findRecettes(
         start || defaultStart,
