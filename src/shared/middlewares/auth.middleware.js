@@ -8,6 +8,7 @@ const authMiddleware = (req, res, next) => {
     if (decoded.id && decoded.role) {
       req.query.userId = decoded.id;
       req.query.userRole = decoded.role;
+      req.query.userEmail = decoded.email;
       console.log(
         "connected user",
         req.query.userId,
