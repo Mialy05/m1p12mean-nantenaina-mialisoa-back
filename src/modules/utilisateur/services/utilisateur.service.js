@@ -16,6 +16,7 @@ const {
   parseMongoDBError,
 } = require("../../../shared/helpers/validation");
 const bcrypt = require("bcrypt");
+const dayjs = require("dayjs");
 
 const findAllUtilisateurs = async (roles, nom) => {
   let filter = { $and: [{ status: UTILISATEUR_STATUS.active }] };
@@ -116,6 +117,7 @@ const inscription = async (utilisateur, role) => {
   newUser.telephone = utilisateur.telephone;
   newUser.role = role;
   newUser.pwd = utilisateur.pwd;
+  newUser.inscriptionDate = dayjs();
 
   const errors = validateUtilisateurData(newUser);
 

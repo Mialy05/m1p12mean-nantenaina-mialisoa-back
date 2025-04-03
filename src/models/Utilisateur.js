@@ -44,7 +44,6 @@ const utilisateurSchema = new mongoose.Schema({
   inscriptionDate: {
     type: Date,
     required: true,
-    default: dayjs(),
   },
 });
 
