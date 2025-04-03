@@ -49,6 +49,7 @@ const findAllFactures = async (userRole, userId, page, limit) => {
       ? {}
       : { "client.email": user.email };
   const factures = await Facture.find(filter)
+    .sort({ date: -1 })
     .skip((page - 1) * limit)
     .limit(limit);
 
