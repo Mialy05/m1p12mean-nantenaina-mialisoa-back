@@ -6,6 +6,7 @@ const {
 } = require("../constant/utilisateur.constant");
 require("dotenv").configDotenv();
 const bcrypt = require("bcrypt");
+const { default: mongoose } = require("mongoose");
 
 const secretKey = process.env.JWT_SECRET;
 
@@ -43,7 +44,7 @@ const generateJWTToken = (utilisateur) => {
 
 const findUtilisateurById = async (id) => {
   const utilisateur = await Utilisateur.findOne({
-    _id: id,
+    _id: new mongoose.Types.ObjectId(id),
     status: UTILISATEUR_STATUS.active,
   });
   return utilisateur;
