@@ -32,11 +32,14 @@ router.delete(
   authorizationMiddleware([UTILISATEUR_ROLES.manager]),
   InterventionController.deleteTask
 );
-router.patch("/taches/:id", InterventionController.updateStatus);
-authorizationMiddleware([
-  UTILISATEUR_ROLES.manager,
-  UTILISATEUR_ROLES.mecanicien,
-]);
+router.patch(
+  "/taches/:id",
+  authorizationMiddleware([
+    UTILISATEUR_ROLES.manager,
+    UTILISATEUR_ROLES.mecanicien,
+  ]),
+  InterventionController.updateStatus
+);
 
 router.patch(
   "/taches/:id",

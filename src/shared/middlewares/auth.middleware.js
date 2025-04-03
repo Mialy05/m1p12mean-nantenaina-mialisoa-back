@@ -16,17 +16,22 @@ const authMiddleware = (req, res, next) => {
       );
       next();
     } else {
-      throw new Error("401");
+      return res
+        .status(401)
+        .json({ isError: true, message: "Connexion requise" });
     }
   } catch (e) {
     console.log(e);
 
-    res.status(401).send({ isError: true, message: "Connexion requise" });
+    return res
+      .status(401)
+      .json({ isError: true, message: "Connexion requise" });
   }
 };
 
 const authorizationMiddleware = (roles) => (req, res, next) => {
   if (req.query.userRole) {
+    next();
     if (roles.includes("*") || roles.includes(req.query.userRole)) {
       next();
     } else {
