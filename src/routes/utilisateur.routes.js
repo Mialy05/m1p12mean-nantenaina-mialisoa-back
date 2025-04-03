@@ -4,6 +4,7 @@ const {
 } = require("../modules/auth/constant/utilisateur.constant");
 const {
   authorizationMiddleware,
+  authMiddleware,
 } = require("../shared/middlewares/auth.middleware");
 const router = require("express").Router();
 
@@ -26,6 +27,15 @@ router.get(
   `/:id/taches`,
   authorizationMiddleware([UTILISATEUR_ROLES.manager]),
   UtilisateurController.findAllTacheOfMecanicien
+);
+
+router.post(`/inscription`, UtilisateurController.inscriptionUser);
+
+// TODO: mnola miditra ao am controller ihany na d mi failed ary lay middleware
+router.post(
+  `/mecaniciens/inscription`,
+  authorizationMiddleware([UTILISATEUR_ROLES.manager]),
+  UtilisateurController.inscriptionMecano
 );
 
 module.exports = router;

@@ -7,9 +7,15 @@ const {
   PAGINATION_ROW,
   TACHE_DELETED_STATUS,
   TACHE_STATUS,
+  CAUSE_ERROR,
 } = require("../../../shared/constants/constant");
 const Tache = require("../../../models/Tache");
 const { default: mongoose } = require("mongoose");
+const {
+  validateUtilisateurData,
+  parseMongoDBError,
+} = require("../../../shared/helpers/validation");
+const bcrypt = require("bcrypt");
 
 const findAllUtilisateurs = async (roles, nom) => {
   let filter = { $and: [{ status: UTILISATEUR_STATUS.active }] };
@@ -102,8 +108,47 @@ const findAllTacheOfUtilisateur = async (idUtilisateur) => {
   return formattedTaches;
 };
 
+const inscription = async (utilisateur, role) => {
+  const newUser = new Utilisateur();
+  newUser.email = utilisateur.email;
+  newUser.nom = utilisateur.nom;
+  newUser.prenom = utilisateur.prenom;
+  newUser.telephone = utilisateur.telephone;
+  newUser.role = role;
+  newUser.pwd = utilisateur.pwd;
+
+  const errors = validateUtilisateurData(newUser);
+
+  if (errors) {
+    throw new Error(CAUSE_ERROR.badRequest, { cause: errors });
+  } else {
+    try {
+      const salt = 10;
+      const hashedPassword = await bcrypt.hash(utilisateur.pwd, salt);
+      newUser.pwd = hashedPassword;
+
+      await newUser.save();
+      const { pwd, status, role, __v, ...rest } = newUser._doc;
+      return rest;
+    } catch (error) {
+      const parsedError = parseMongoDBError(error);
+      throw new Error(CAUSE_ERROR.badRequest, { cause: [parsedError] });
+    }
+  }
+};
+
+const inscriptionClient = async (utilisateur) => {
+  return await inscription(utilisateur, UTILISATEUR_ROLES.client);
+};
+
+const inscriptionMecanicien = async (utilisateur) => {
+  return await inscription(utilisateur, UTILISATEUR_ROLES.mecanicien);
+};
+
 module.exports = {
   findAllUtilisateurs,
   findAllPaginatedMecano,
   findAllTacheOfUtilisateur,
+  inscriptionClient,
+  inscriptionMecanicien,
 };

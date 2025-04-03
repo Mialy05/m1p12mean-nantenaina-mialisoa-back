@@ -1,9 +1,15 @@
-const { PAGINATION_ROW } = require("../../../shared/constants/constant");
+const { default: mongoose } = require("mongoose");
+const {
+  PAGINATION_ROW,
+  CAUSE_ERROR,
+} = require("../../../shared/constants/constant");
 const ApiResponse = require("../../../shared/types/ApiResponse");
 const {
   findAllUtilisateurs,
   findAllPaginatedMecano,
   findAllTacheOfUtilisateur,
+  inscriptionClient,
+  inscriptionMecanicien,
 } = require("../services/utilisateur.service");
 
 class UtilisateurController {
@@ -46,6 +52,50 @@ class UtilisateurController {
       res
         .status(500)
         .json(ApiResponse.error(error.message || `Une erreur s'est produite`));
+    }
+  }
+
+  static async inscriptionUser(req, res) {
+    const data = req.body;
+
+    try {
+      const newUser = await inscriptionClient(data);
+      res.status(201).json(ApiResponse.success(newUser, "Utilisateur créé"));
+    } catch (error) {
+      console.log(error);
+      if (error.message == CAUSE_ERROR.badRequest) {
+        res
+          .status(CAUSE_ERROR.badRequest)
+          .json(ApiResponse.error("Données non valides", error.cause));
+      } else {
+        res
+          .status(500)
+          .json(
+            ApiResponse.error(error.message || "Une erreur s'est produite")
+          );
+      }
+    }
+  }
+
+  static async inscriptionMecano(req, res) {
+    const data = req.body;
+
+    try {
+      const newUser = await inscriptionMecanicien(data);
+      res.status(201).json(ApiResponse.success(newUser, "Utilisateur créé"));
+    } catch (error) {
+      console.log(error);
+      if (error.message == CAUSE_ERROR.badRequest) {
+        res
+          .status(CAUSE_ERROR.badRequest)
+          .json(ApiResponse.error("Données non valides", error.cause));
+      } else {
+        res
+          .status(500)
+          .json(
+            ApiResponse.error(error.message || "Une erreur s'est produite")
+          );
+      }
     }
   }
 }
