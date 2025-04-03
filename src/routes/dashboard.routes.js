@@ -39,6 +39,7 @@ router.get(
 
 router.get(
   "/intervention-mec-stat",
+  authorizationMiddleware([UTILISATEUR_ROLES.mecanicien]),
   DashboardController.interventionOfMechanic
 );
 router.get(

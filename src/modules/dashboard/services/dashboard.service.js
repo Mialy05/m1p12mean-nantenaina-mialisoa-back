@@ -5,6 +5,9 @@ const Devis = require("../../../models/Devis");
 const RendezVous = require("../../../models/RendezVous");
 const Tache = require("../../../models/Tache");
 const { TACHE_STATUS } = require("../../../shared/constants/constant");
+const {
+  UTILISATEUR_ROLES,
+} = require("../../auth/constant/utilisateur.constant");
 
 const findRecettes = async (dateStart, dateEnd) => {
   const filter = {
@@ -197,6 +200,7 @@ const findClientFidelity = async (dateStart, dateEnd) => {
 };
 
 const nbrInterventionOfMechanic = async (idMec, dateStart, dateEnd) => {
+  // console.log(idMec, dateStart, dateEnd);
   const data = await Tache.aggregate([
     {
       $match: {
@@ -268,7 +272,7 @@ const findHourWorked = async (idMec, dateStart, dateEnd) => {
       },
     },
   ]);
-  return data[0].total || 0;
+  return data[0]?.total || 0;
 };
 
 const findCountTaskByStatusOfMechanic = async (idMec, dateStart, dateEnd) => {
