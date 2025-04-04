@@ -42,7 +42,8 @@ class DevisController {
       const demande = new DemandeDevis(demandeData);
       demande.status = 0;
       demande.dateDemande = dayjs().toDate();
-      demande.utilisateur = utilisateur;
+      const { pwd, ...userNoPass } = utilisateur;
+      demande.utilisateur = userNoPass;
 
       if (vehiculeId === "0") {
         const vehicule = new Vehicule(req.body.vehicule);
