@@ -167,6 +167,7 @@ class InterventionController {
     const { id } = req.params;
     try {
       const taches = await findTachesByIdIntervention(id);
+
       res.json(ApiResponse.success(taches));
     } catch (error) {
       if (error.cause == CAUSE_ERROR.notFound) {
