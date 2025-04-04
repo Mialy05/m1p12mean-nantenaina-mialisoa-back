@@ -349,7 +349,7 @@ const isTransitionAllowed = (currentStatus, targetStatus) => {
   );
 };
 
-const updateTacheStatus = async (idTache, targetStatus) => {
+const updateTacheStatus = async (idTache, targetStatus, userRole, userId) => {
   const tacheObjectId = new mongoose.Types.ObjectId(idTache);
   const statusKeys = Object.keys(TACHE_STATUS).map(Number);
 
@@ -366,8 +366,22 @@ const updateTacheStatus = async (idTache, targetStatus) => {
   });
   if (tache) {
     if (targetStatus == TACHE_DELETED_STATUS) {
-      await deleteTache(idTache);
+      if (userRole == UTILISATEUR_ROLES.manager) {
+        await deleteTache(idTache);
+      } else {
+        throw new Error("Action interdite pour votre profil", {
+          cause: CAUSE_ERROR.forbidden,
+        });
+      }
     } else {
+      const isResponsable = tache.responsables.some(
+        (r) => r == new mongoose.Types.ObjectId(userId)
+      );
+      if (!isResponsable) {
+        throw new Error("Vous n'êtes pas assigné à cette tâche", {
+          cause: CAUSE_ERROR.forbidden,
+        });
+      }
       if (isTransitionAllowed(tache.status, targetStatus)) {
         await Tache.updateOne(
           {
