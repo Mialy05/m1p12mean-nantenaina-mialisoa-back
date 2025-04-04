@@ -282,7 +282,9 @@ const findInterventionById = async (idIntervention, userRole) => {
       if (groupedByStatus[TACHE_STATUS[tache.status]] !== undefined) {
         groupedByStatus[TACHE_STATUS[tache.status]].taches.push(tache);
       }
-      tache.actionPermis = getAllowedTransition(tache.status);
+      const t = getAllowedTransition(tache.status);
+
+      tache.actionPermis = t;
     }
 
     intervention.taches = Object.values(groupedByStatus);
@@ -409,13 +411,24 @@ const findTachesByIdIntervention = async (idIntervention) => {
     }, {});
 
   for (let tache of taches) {
+    const t = getAllowedTransition(tache.status);
+
+    const tacheTmp = {
+      _id: tache._id,
+      status: tache.status,
+      responsables: tache.responsables,
+      nom: tache.nom,
+      estimation: tache.estimation,
+      actionPermis: t,
+    };
+
     if (groupedByStatus[TACHE_STATUS[tache.status]] !== undefined) {
-      groupedByStatus[TACHE_STATUS[tache.status]].taches.push(tache);
+      groupedByStatus[TACHE_STATUS[tache.status]].taches.push(tacheTmp);
     }
-    tache.actionPermis = getAllowedTransition(tache.status);
   }
 
   taches = Object.values(groupedByStatus);
+  console.log(taches);
   return taches;
 };
 
