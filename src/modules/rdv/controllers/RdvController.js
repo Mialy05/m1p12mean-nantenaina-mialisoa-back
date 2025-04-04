@@ -102,10 +102,10 @@ class RdvController {
   static async getAllAcceptedRdv(req, res) {
     try {
       const startDate = req.query.startDate
-        ? dayjs(req.query.startDate, "YYYY-MM-DD")
+        ? dayjs(req.query.startDate)
         : dayjs().startOf("year");
       const endDate = req.query.endDate
-        ? dayjs(req.query.endDate, "YYYY-MM-DD")
+        ? dayjs(req.query.endDate)
         : dayjs().endOf("year");
       console.log(startDate.toISOString(), endDate.toISOString());
       let userId = null;
